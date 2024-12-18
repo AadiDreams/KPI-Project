@@ -2,8 +2,8 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    display: flex;
     height: 100vh;
+    display: flex;
 }
 
 /* Container layout */
@@ -15,7 +15,7 @@ body {
 /* Sidebar Styling */
 .sidebar {
     width: 250px;
-    background-color: #b30000;
+    background-color: #b30000; /* Red */
     color: #fff;
     display: flex;
     flex-direction: column;
@@ -28,28 +28,41 @@ body {
     text-align: center;
     margin-bottom: 30px;
     font-weight: bold;
+    text-transform: uppercase;
 }
 
+/* Menu items */
 .menu {
     flex-grow: 1;
 }
 
 .menu-item {
-    display: block;
-    padding: 10px 15px;
-    margin: 5px 0;
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    margin: 5px 10px;
     color: #fff;
     text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
     border-radius: 5px;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
+}
+
+.menu-item .icon {
+    margin-right: 10px;
+    font-size: 18px;
 }
 
 .menu-item.active, .menu-item:hover {
-    background-color: #cc0000;
+    background-color: #cc0000; /* Darker red */
 }
 
+/* Logout Button */
 .logout {
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     padding: 10px 15px;
     color: #fff;
     text-decoration: none;
@@ -57,7 +70,13 @@ body {
     border: 1px solid #fff;
     border-radius: 5px;
     margin-top: 20px;
+    font-size: 14px;
     transition: all 0.3s ease;
+}
+
+.logout .icon {
+    margin-right: 8px;
+    font-size: 16px;
 }
 
 .logout:hover {
@@ -79,6 +98,7 @@ body {
     align-items: center;
     padding: 10px 20px;
     background-color: #fff;
+    border-bottom: 1px solid #ddd;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
