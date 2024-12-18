@@ -26,6 +26,38 @@ h1 {
     margin-bottom: 20px;
 }
 
+/* Toggle buttons for login type */
+.login-type-toggle {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.login-type-toggle button {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #b30000;
+    background-color: #fff;
+    color: #b30000;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-type-toggle button.active {
+    background-color: #b30000;
+    color: #fff;
+}
+
+.login-type-toggle button:not(:last-child) {
+    border-right: none;
+}
+
+.login-type-toggle button:hover:not(.active) {
+    background-color: #f5f5f5;
+}
+
+/* Input fields */
 .input-group {
     margin-bottom: 15px;
     text-align: left;
@@ -51,6 +83,7 @@ input:focus {
     box-shadow: 0 0 5px rgba(179, 0, 0, 0.5);
 }
 
+/* Login button */
 .login-button {
     width: 100%;
     padding: 10px;
