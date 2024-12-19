@@ -1,0 +1,152 @@
+/* General Body Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #FAF3F0; /* Light cream background */
+    color: #FF0000; /* Vibrant red for all text */
+    margin: 0;
+    padding: 0;
+}
+
+/* Fieldset Styling */
+fieldset {
+    background-color: #FAF3F0;
+    border: 2px solid #FF0000;
+    padding: 20px;
+    margin: 20px;
+    border-radius: 8px;
+}
+
+/* Form Title */
+h1 {
+    text-align: center;
+    color: #FF0000; /* Vibrant red for title */
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table, th, td {
+    border: 1px solid #FF0000; /* Red border for tables */
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #2F3E46; /* Dark blue-gray for table headers */
+    color: #FAF3F0; /* Light cream text color */
+}
+
+td input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #FF0000; /* Red border for inputs */
+    background-color: #FAF3F0; /* Light cream background for inputs */
+    color: #2F3E46; /* Dark blue-gray text color in inputs */
+    box-sizing: border-box;
+}
+
+td input:focus {
+    outline-color: #FF0000; /* Focus effect in red */
+}
+
+/* Button Styling */
+button {
+    background-color: #FF0000; /* Red background for buttons */
+    color: #FAF3F0; /* Light cream text for buttons */
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #2F3E46; /* Dark blue-gray on hover */
+    color: #FAF3F0; /* Light cream text color on hover */
+}
+
+/* Form Labels */
+label {
+    color: #FF0000; /* Red text for labels */
+    font-size: 16px;
+}
+
+/* Textarea Styling */
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #FF0000; /* Red border for textareas */
+    background-color: #FAF3F0; /* Light cream background for textareas */
+    color: #2F3E46; /* Dark blue-gray text color in textareas */
+    overflow: auto;
+    resize: vertical;
+    box-sizing: border-box; 
+}
+
+textarea:focus {
+    outline-color: #FF0000; /* Focus effect in red */
+}
+
+/* Date input Styling */
+input[type="date"],
+input[type="time"],
+
+input[type="text"],
+select
+{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #FF0000; /* Red border */
+    background-color: #FAF3F0; /* Light cream background */
+    color: #2F3E46; /* Dark blue-gray text */
+    box-sizing: border-box;
+}
+
+input[type="file"] {
+    background-color: #FAF3F0; /* Background color for the button */
+    color: #FF0000; /* Text color for the button */
+    border: none; /* Remove default border */
+    cursor: pointer;
+    font-size: 14px;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+   
+    padding: 5px;
+    border: 2px solid #FF0000; /* Red border */
+    background-color: #FAF3F0; /* Light cream background */
+    color: #2F3E46; /* Dark blue-gray text */
+    box-sizing: border-box;
+    appearance: none; /* Remove browser-specific styles */
+    -webkit-appearance: none; /* For Safari */
+    -moz-appearance: none; /* For Firefox */
+}
+
+
+
+input[type="date"]:focus {
+    outline-color: #FF0000; /* Red focus outline */
+}
+
+/* Adjusting button placement and form width */
+form {
+    max-width: 1000px;
+    margin: auto;
+}
+
+/* Ensuring consistent spacing between form elements */
+fieldset {
+    margin-bottom: 15px;
+}
+
+/* Adjusting the appearance of the submit button */
+#submit {
+    margin-top: 20px;
+}

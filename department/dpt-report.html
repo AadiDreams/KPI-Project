@@ -3,36 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Department Dashboard - Home</title>
+    <title>Incident Report</title>
     <link rel="stylesheet" href="../assets/css/styles.css">
+    <link rel="stylesheet" href="../assets/css/incident-report.css">
+    <script src="../assets/js/incident-report.js" defer></script>
     <style>
-        .content-area {
-            padding: 20px;
-        }
+        body {
+    font-family: Arial, sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
 
-        .dashboard-widgets {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
+fieldset {
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
 
-        .widget {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
+legend {
+    font-weight: bold;
+    color: #b30000;
+}
 
-        .widget h3 {
-            margin: 0 0 10px;
-            color: #b30000;
-        }
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
 
-        .widget p {
-            font-size: 18px;
-            margin: 0;
-        }
+input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #b30000;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #cc0000;
+}
+
     </style>
 </head>
 <body>
@@ -63,9 +89,157 @@
                 </div>
             </div>
 
-            <div class="content-area" id="content-area">
-                <h2>Incident Report</h2>
-                <p>Create new incident report here.</p>
+            <div class="content-area">
+                    <h2>Incident Reporting Proforma(General)</h2>
+                    <form action="" method="post">
+                        <fieldset>
+                            <legend>General Information</legend>
+                            <label for="date">Date(DD:MM:YYYY):</label>
+                            <input type="date" id="date" name="date" required><br><br>
+                
+                            <label for="uid">UID Number:</label>
+                            <input type="text" name="uid" id="uid" required><br><br>
+                
+                            <label for="incident-time">Incident Time(24 Hrs):</label>
+                            <input type="time" id="incident-time" name="incident-time" required><br><br>
+                
+                            <label for="location">Location:</label>
+                            <input type="text" id="location" name="location" required><br><br>
+                
+                            <label for="description">Description of Location:</label>
+                            <textarea id="description" name="description" rows="5" cols="50" required></textarea><br><br>
+                
+                            <label for="type-of-incident">Type of Incident:</label>
+                            <select name="type-of-incident" id="type-of-incident" required>
+                                <option value="" selected>Select an Incident</option>
+                                <option value="Incident1">Incident1</option>
+                                <option value="Incident2">Incident2</option>
+                                <option value="Incident3">Incident3</option>
+                                <option value="Other">Other</option>
+                            </select><br><br>
+                
+                            <label for="no-of-injured">No of Injured:</label>
+                            <input type="text" id="no-of-injured" name="no-of-injured" required><br><br>
+                
+                            <label for="injured-person-category">Injured Person Category:</label>
+                            <input type="text" id="injured-person-category" name="injured-person-category" required><br><br>
+                
+                            <label for="type-of-casualty">Type of Casualty:</label>
+                            <input type="text" id="type-of-casualty" name="type-of-casualty" required><br><br>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Details</legend>
+                            <label for="incident-details">Incident Details:</label>
+                            <textarea id="incident-details" name="incident-details" rows="5" cols="50" required></textarea><br><br>
+                
+                            <label for="image-upload">Upload Image(if any):</label>
+                            <input type="file" id="image-upload" name="image-upload"><br><br>
+                
+                            <label for="alert-received-by">Alert Received By:</label>
+                            <input type="text" id="alert-received-by" name="alert-received-by" required><br><br>
+                
+                            <label for="alerted-by">Alerted By:</label>
+                            <input type="text" id="alerted-by" name="alerted-by" required><br><br>
+                
+                            <label for="alert-time">Alert Time(24 Hrs):</label>
+                            <input type="time" id="alert-time" name="alert-time" required><br><br>
+                
+                            <label for="medical-support">Medical Support:</label>
+                            <input type="text" id="medical-support" name="medical-support" required><br><br>
+                
+                            <label for="name-of-doctor">Name of Doctor:</label>
+                            <input type="text" id="name-of-doctor" name="name-of-doctor" required><br><br>
+                
+                            <label for="name-of-nurse">Name of Nurse:</label>
+                            <input type="text" id="name-of-nurse" name="name-of-nurse" required><br><br>
+                
+                            <label for="ambulance-service">Ambulance Service:</label>
+                            <input type="text" id="ambulance-service" name="ambulance-service" required><br><br>
+                        </fieldset>
+                        <fieldset>
+                             <legend>Chronological Summary of Events</legend>
+                             <table id="Events-table" border="1">
+                                <tr>
+                                    <th>Time(24 Hrs)</th>
+                                    <th>Description</th>
+                                    <th>Action</th>
+                                </tr>
+                                <tr>
+                                    <td><input type="time" name="event-time" placeholder="Time" required></td>
+                                    <td><textarea name="event-description" id="event-description" placeholder="Enter details..." required></textarea></td>
+                                    <td><button type="button" class="remove-button" onclick="removeEventRow(this)">Remove</button></td>
+                                </tr>
+                            </table><br>
+                            <button type="button" onclick="addEventRow()">Add Event</button>
+                
+                        </fieldset>
+                        <fieldset>
+                            <label for="police-notification">Police Notification:</label>
+                            <input type="text"  id="police-notification" name="police-notification" required><br><br>
+                
+                            <label for="to-whom">To Whom(Mention Police Station):</label>
+                            <input type="text" id="to-whom" name="to-whom" required><br><br>
+                
+                            <label for="reporting-time">Time(24 Hrs)</label>
+                            <input type="time" id="reporting-time" name="reporting-time" required><br><br>
+                
+                            <label for="legal-action">Leagal Action:</label>
+                            <textarea id="legal-action" name="legal-action" rows="5" cols="50" required></textarea><br><br>
+                
+                            <label for="details">Details:</label>
+                            <textarea id="details" name="details" rows="5" cols="50" required></textarea><br><br>
+                
+                            <label for="damage-to">Damage to Property:</label>
+                            <textarea id="damage-to" name="damage-to" rows="5" cols="50" required></textarea>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Witness</legend>
+                            <table id="witness-table" border="1">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Organization</th>
+                                    <th>Contact Number</th>
+                                    <th>Action</th>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" name="witness-name" id="witness-name" placeholder="Name" required></td>
+                                    <td><input type="text" name="witness-org" id="witness-org" placeholder="Organization" required></td>
+                                    <td><input type="text" name="witness-contact" id="witness-contact" placeholder="Contact Number" required></td>
+                                    <td><button type="button" class="remove-button" onclick="removeWitnessRow(this)">Remove</button></td>
+                                </tr>
+                            </table><br>
+                            <button type="button" onclick="addWitnessRow()">Add Witness</button>
+                
+                        </fieldset>
+                        <fieldset>
+                            <label for="contributing-factors">Contributing factors:</label>
+                            <textarea id="contributing-factors" name="contributing-factors" rows="5" cols="50" required></textarea><br><br>
+                
+                            <label for="contributing-factors-details">Details:</label>
+                            <textarea id="contributing-factors-details" name="contributing-factors-details" rows="5" cols="50" required></textarea><br><br>
+                
+                            <label for="recommendations-for-remedial-actions">Recommendations for Remedial Actions:</label>
+                            <textarea id="recommendations-for-remedial-actions" name="recommendations-for-remedial-actions" rows="5" cols="50" required></textarea><br><br>
+                
+                            <label for="status-of-incident">Status of the Incident:</label>
+                            <input type="text" id="status-of-incident" name="status-of-incident" required><br><br>
+                
+                            <label for="follow-up-actions">Follow Up Actions:</label>
+                            <textarea id="follow-up-actions" name="follow-up-actions" rows="5" cols="50" required></textarea><br><br>
+                
+                            <label for="any-other-comments">Any other comments:</label>
+                            <textarea id="any-other-comments" name="any-other-comments" rows="5" cols="50" required></textarea><br><br>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Report Submitted By</legend>
+                            <label for="submitted-name">Name:</label>
+                            <input type="text" id="submitted-name" name="submitted-name" required><br><br>
+                
+                            <label for="designation">Designation:</label>
+                            <input type="text" id="designation" name="designation" required><br><br>
+                        </fieldset><br>
+                        <button type="submit" id="submit">Submit</button>
+                    </form>              
             </div>
         </main>
     </div>
