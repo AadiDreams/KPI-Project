@@ -3,12 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Head Dashboard</title>
-    <link rel="stylesheet" href="./css/security-head.css">
+    <title>Home - Security Head</title>
+    <link rel="stylesheet" href="css/security-head.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .widget {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .widget h3 {
+            margin: 0 0 10px;
+            color: #b30000;
+        }
+
+        .widget p {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .recent-updates {
+            margin-top: 40px;
+        }
+
+        .recent-updates h3 {
+            color: #b30000;
+        }
+
+        .update-item {
+            background-color: #fff;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .update-item span {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            background-color: #b30000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Left Sidebar -->
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
                 <h1>Airport</h1>
@@ -26,7 +94,6 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Bar -->
             <div class="top-bar">
                 <div class="profile">
                     <span>Welcome, Security Head</span>
@@ -37,13 +104,44 @@
                 </div>
             </div>
 
-            <!-- Content Area -->
-            <div class="content-area" id="content-area">
-                <h2>Home</h2>
-                <p>Welcome to the Security Management System. Use the menu on the left to navigate through your options.</p>
+            <div class="content-area">
+                <h2>Welcome to the Security Management System</h2>
+                <p>Here’s a quick overview of the airport’s security status.</p>
+
+                <!-- Dashboard Widgets -->
+                <div class="dashboard">
+                    <div class="widget">
+                        <h3>New Incidents</h3>
+                        <p>12</p>
+                    </div>
+                    <div class="widget">
+                        <h3>Pending Actions</h3>
+                        <p>8</p>
+                    </div>
+                    <div class="widget">
+                        <h3>Threshold Alerts</h3>
+                        <p>3</p>
+                    </div>
+                </div>
+
+                <!-- Recent Updates -->
+                <div class="recent-updates">
+                    <h3>Recent Updates</h3>
+                    <div class="update-item">
+                        <div>Fire alarm triggered in Terminal 3.</div>
+                        <span>5 mins ago</span>
+                    </div>
+                    <div class="update-item">
+                        <div>Unauthorized access detected in Zone B.</div>
+                        <span>15 mins ago</span>
+                    </div>
+                    <div class="update-item">
+                        <div>Maintenance delay reported in Gate 7.</div>
+                        <span>30 mins ago</span>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
-    <script src="./js/security-head.js"></script>
 </body>
 </html>
