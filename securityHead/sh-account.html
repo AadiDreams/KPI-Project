@@ -3,12 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Head Dashboard</title>
-    <link rel="stylesheet" href="./css/security-head.css">
+    <title>Account - Security Head</title>
+    <link rel="stylesheet" href="css/security-head.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h3 {
+            margin-top: 0;
+            color: #b30000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 95%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #b30000;
+            color: #fff;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Left Sidebar -->
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
                 <h1>Airport</h1>
@@ -26,7 +77,6 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Bar -->
             <div class="top-bar">
                 <div class="profile">
                     <span>Welcome, Security Head</span>
@@ -37,13 +87,64 @@
                 </div>
             </div>
 
-            <!-- Content Area -->
-            <div class="content-area" id="content-area">
-                <h2>Account</h2>
-                <p>Manage your account settings and preferences.</p>
+            <div class="content-area">
+                <!-- Profile Section -->
+                <div class="section">
+                    <h3>Profile</h3>
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" value="John Doe" required>
+                        </div>
+                        <button type="submit" class="btn">Save Changes</button>
+                    </form>
+                </div>
+
+                <!-- Account Section -->
+                <div class="section">
+                    <h3>Account</h3>
+                    <form id="password-form">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" placeholder="Enter current password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" placeholder="Enter new password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" placeholder="Confirm new password" required>
+                        </div>
+                        <button type="submit" class="btn">Update Password</button>
+                    </form>
+                </div>
             </div>
         </main>
     </div>
-    <script src="./js/security-head.js"></script>
+
+    <script>
+        // Handle profile form submission
+        document.getElementById("profile-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const name = document.getElementById("name").value;
+            alert(`Name updated to: ${name}`);
+        });
+
+        // Handle password form submission
+        document.getElementById("password-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById("current-password").value;
+            const newPassword = document.getElementById("new-password").value;
+            const confirmPassword = document.getElementById("confirm-password").value;
+
+            if (newPassword !== confirmPassword) {
+                alert("New passwords do not match!");
+                return;
+            }
+
+            alert("Password updated successfully!");
+        });
+    </script>
 </body>
 </html>
