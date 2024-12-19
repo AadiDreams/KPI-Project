@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Account</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h3 {
+            color: #b30000;
+            margin-bottom: 15px;
+        }
+
+        .profile-info p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 95%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .btn-submit {
+            background-color: #b30000;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-submit:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Airport</h1>
+            </div>
+            <nav class="menu">
+                <a href="./dpt-home.html" class="menu-item" data-content="home"><span class="icon">🏠</span> Home</a>
+                <a href="./dpt-report.html" class="menu-item" data-content="reports"><span class="icon">📝</span> Report Incident</a>
+                <a href="./dpt-notifications.html" class="menu-item" data-content="notifications"><span class="icon">🔔</span> Notifications</a>
+                <a href="./dpt-account.html" class="menu-item active" data-content="account"><span class="icon">⚙️</span> Account</a>
+            </nav>
+            <a href="#" class="logout"><span class="icon">🚪</span> Logout</a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, <span id="department-name">[Department Name]</span></span>
+                    <div class="profile-icon">👤</div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Profile Section -->
+                <div class="section">
+                    <h3>Profile</h3>
+                    <div class="profile-info">
+                        <p><strong>Department Name:</strong> <span id="dept-name">[Department Name]</span></p>
+                        <p><strong>Department ID:</strong> <span id="dept-id">[Department ID]</span></p>
+                    </div>
+                </div>
+
+                <!-- Account Section -->
+                <div class="section">
+                    <h3>Account</h3>
+                    <form id="change-password-form">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" name="current-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" name="new-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" name="confirm-password" required>
+                        </div>
+                        <button type="submit" class="btn-submit">Change Password</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
