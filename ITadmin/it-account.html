@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - IT Admin</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h3 {
+            margin-top: 0;
+            color: #b30000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 95%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #b30000;
+            color: #fff;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Airport</h1>
+            </div>
+            <nav class="menu">
+                <a href="./it-home.html" class="menu-item" data-content="home"><span class="icon">🏠</span> Home</a>
+                <a href="./it-dept.html" class="menu-item" data-content="department"><span class="icon">🏢</span> Department</a>
+                <a href="./it-account.html" class="menu-item active" data-content="account"><span class="icon">⚙️</span> Account</a>
+            </nav>
+            <a href="#" class="logout"><span class="icon">🚪</span> Logout</a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, IT Admin</span>
+                    <div class="profile-icon">👤</div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Profile Section -->
+                <div class="section">
+                    <h3>Profile</h3>
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" value="Jane Doe" required>
+                        </div>
+                        <button type="submit" class="btn">Save Changes</button>
+                    </form>
+                </div>
+
+                <!-- Account Section -->
+                <div class="section">
+                    <h3>Account</h3>
+                    <form id="password-form">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" placeholder="Enter current password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" placeholder="Enter new password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" placeholder="Confirm new password" required>
+                        </div>
+                        <button type="submit" class="btn">Update Password</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Handle profile form submission
+        document.getElementById("profile-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const name = document.getElementById("name").value;
+            alert(`Name updated to: ${name}`);
+        });
+
+        // Handle password form submission
+        document.getElementById("password-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById("current-password").value;
+            const newPassword = document.getElementById("new-password").value;
+            const confirmPassword = document.getElementById("confirm-password").value;
+
+            if (newPassword !== confirmPassword) {
+                alert("New passwords do not match!");
+                return;
+            }
+
+            alert("Password updated successfully!");
+        });
+    </script>
+</body>
+</html>
