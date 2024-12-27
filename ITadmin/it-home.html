@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Admin Dashboard - Home</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .dashboard-widgets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .widget {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .widget h3 {
+            margin: 0 0 10px;
+            color: #b30000;
+        }
+
+        .widget p {
+            font-size: 18px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Airport</h1>
+            </div>
+            <nav class="menu">
+                <a href="./it-home.html" class="menu-item active" data-content="home"><span class="icon">🏠</span> Home</a>
+                <a href="./it-department.html" class="menu-item" data-content="department"><span class="icon">🏢</span> Department</a>
+                <a href="./it-account.html" class="menu-item" data-content="account"><span class="icon">⚙️</span> Account</a>
+            </nav>
+            <a href="#" class="logout"><span class="icon">🚪</span> Logout</a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, <span id="admin-name">[IT Admin]</span></span>
+                    <div class="profile-icon">👤</div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h2>Welcome to the Security Management System</h2>
+                <p>Here’s an overview of your recent activities and system updates.</p>
+
+                <!-- Dashboard Widgets -->
+                <div class="dashboard-widgets">
+                    <div class="widget">
+                        <h3>Departments Monitored</h3>
+                        <p>8</p>
+                    </div>
+                    <div class="widget">
+                        <h3>System Health</h3>
+                        <p>Optimal</p>
+                    </div>
+                    <div class="widget">
+                        <h3>Active Users</h3>
+                        <p>25</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
