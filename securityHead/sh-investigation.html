@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Security Head</title>
+    <link rel="stylesheet" href="../assets/css/incident-report.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <script src="js/security-head.js" defer></script>
+    <style>
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 1px solid #b30000;
+            color: #b30000;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background-color: #b30000;
+            color: #fff;
+        }
+
+        .reports-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .report-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 5px 10px;
+            color: #fff;
+            background-color: #b30000;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+
+        .dropdown-container {
+            position: relative;
+            width: 300px;
+        }
+
+        .dropdown-button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #b30000;
+            background-color: #FAF3F0;
+            cursor: pointer;
+            text-align: left;
+            border-radius: 5px;
+        }
+
+        .dropdown-button:after {
+            content: '▼';
+            float: right;
+            margin-top: 3px;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #b30000;
+            border-radius: 5px;
+            margin-top: 5px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .dropdown-item {
+            padding: 8px 10px;
+            background-color: #FAF3F0;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .dropdown-item:hover {
+            background-color: #FAF3F0;
+        }
+
+        .dropdown-item.selected {
+            background-color: #ffcccc;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .selected-departments {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .selected-department {
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #ffcccc;
+            color: #000;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .selected-department span {
+            margin-left: 10px;
+            color: #999;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Airport</h1>
+            </div>
+            <nav class="menu">
+                <a href="./sh-home.html" class="menu-item" data-content="home"><span class="icon">🏠</span> Home</a>
+                <a href="./sh-visualize.html" class="menu-item" data-content="visualise"><span class="icon">📊</span> Visualise</a>
+                <a href="./sh-reports.html" class="menu-item active" data-content="reports"><span class="icon">📝</span> Reports</a>
+                <a href="./sh-incidents.html" class="menu-item" data-content="incidents"><span class="icon">❗</span> Incidents</a>
+                <a href="./sh-notifications.html" class="menu-item" data-content="notifications"><span class="icon">🔔</span> Notifications</a>
+                <a href="./sh-account.html" class="menu-item" data-content="account"><span class="icon">⚙️</span> Account</a>
+            </nav>
+            <a href="#" class="logout"><span class="icon">🚪</span> Logout</a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, Security Head</span>
+                    <div class="profile-icon">👤</div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h1 style="color: #b30000;">Safety Investigation Report</h1>
+        <form action="" method="post">
+            <fieldset>
+                <legend>Details of Occurrence</legend>
+                <table border="1" id="details-of-occurence">
+                    <tr>
+                        <td>Date & Time of Incident(IST)</td>
+                        <td><input type="datetime-local"  id="date-time" name="date-time" required></td>
+                    </tr>
+
+                    <tr>
+                        <td>Name of Airport</td>
+                        <td><input type="text" id="name-of-airport" name="name-of-airport" required></td>
+                    </tr>
+
+                    <tr>
+                        <td>Location of Incident</td>
+                        <td><input type="text" id="location-of-incident" name="location-of-incident" required></td>
+                    </tr>
+
+                    <tr>
+                        <td>Type of Operation</td>
+                        <td><input type="text" id="type-of-operation" name="type-of-operation" required></td>
+                    </tr>
+                </table>
+            </fieldset>
+            <fieldset>
+                <legend>Details of Aircraft Involved, if applicable</legend>
+                <table border="1" id="details-of-aircraft-involved">
+                    <tr>
+                        <td>Name of Airline/Operator</td>
+                        <td><input type="text" id="airline" name="aircraft"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Aircraft Type</td>
+                        <td><input type="text" id="aircraft-type" name="aircraft-type"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Registration no.</td>
+                        <td><input type="text" id="registration-no" name="registration-no"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Flight No.</td>
+                        <td><input type="text" id="flight-no" name="flight-no"></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Sector</td>
+                        <td><input type="text" id="sector" name="sector"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Phase of Operation</td>
+                        <td><input type="text" id="phase-of-operation-aircraft"></td>
+                    </tr>
+                </table>
+            </fieldset>
+            <fieldset>
+                <legend>Details of Vehicles/Equipments, if applicable (add more column if required)</legend>
+                <table border="1" id="details-of-vechicles/equipments">
+                    <tr id="headerRow">
+                        <th></th>
+                        <th>Vehicle 1</th>
+                    </tr>
+
+                    <tr>
+                        <td>Type of Vehicle/Equipment</td>
+                        <td><input type="text" id="type-of-vehicle/equipment" name="type-of-vehicle/equipment-1"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Airside Vehicle Permit (AVP)</td>
+                        <td><input type="text" id="airside-vehicle-permit" name="airside-vehicle-permit_1"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Equipment No.</td>
+                        <td><input type="text" id="equipment-no" name="equipment-no_1"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Owner/Operator/GHSP</td>
+                        <td><input type="text" id="owner-operator" name="owner-operator_1"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Phase of Operation</td>
+                        <td><input type="text" id="phase-of-operation" name="phase-of-operation_1"></td>
+                    </tr>
+                </table><br>
+                <button type="button" onclick="addVehicleColumn()"> Add Vehicle</button>
+                <button type="button" onclick="removeLastVehicleColumn()">Remove Vehicle</button> <!-- Remove last vehicle column -->
+            </fieldset>
+            <fieldset>
+                <legend>1. Factual Information</legend>
+                <fieldset>
+                    <legend>1.1. Brief Description - A brief narrative of the incident —</legend>
+                    <textarea id="brief-description" name="brief-description" rows="5" cols="50" required></textarea>
+                    <fieldset>
+                        <legend>1.1.1. Chronological summary of the incident-</legend>
+                        <table id="Events-table" border="1">
+                            <tr>
+                                <th>Time(24 Hrs)</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                            <tr>
+                                <td><input type="time" name="event-time" placeholder="Time" required></td>
+                                <td><textarea name="event-description" id="event-description" placeholder="Enter details..." required></textarea></td>
+                                <td><button type="button" class="remove-button" onclick="removeEventRow(this)">Remove</button></td>
+                            </tr>
+                        </table><br>
+                        <button type="button" onclick="addEventRow()">Add Event</button>
+                    </fieldset>
+                    <fieldset>
+                        <legend>1.1.2. Action taken</legend>
+                        <textarea id="action-taken" name="action-taken" rows="5" cols="50" required></textarea>
+                    </fieldset>
+                </fieldset>
+                <fieldset>
+                    <legend>1.2. Injuries to Persons</legend>
+                    <table border="1" id="injuries-to-person">
+                        <tr>
+                            <th>Injuries</th>
+                            <th>Driver/Equipment <br> Operator</th>
+                            <th>Ground Staff</th>
+                            <th>Others</th>
+                        </tr>
+
+                        <tr>
+                            <td>Fatal</td>
+                            <td><input type="text" id="injuries-fatal-driver" name="injuries-fatal-driver" required></td>
+                            <td><input type="text" id="injuries-fatal-ground-staff" name="injuries-fatal-ground-staff" required></td>
+                            <td><input type="text" id="injuries-fatal-other" name="injuries-fatal-other" required></td>
+                        </tr>
+
+                        <tr>
+                            <td>Serious</td>
+                            <td><input type="text" id="injuries-serious-driver" name="injuries-serious-driver" required></td>
+                            <td><input type="text" id="injuries-serious-ground-staff" name="injuries-serious-ground-staff" required></td>
+                            <td><input type="text" id="injuries-serious-other" name="injuries-serious-other" required></td>
+                        </tr>
+
+                        <tr>
+                            <td>Minor/None</td>
+                            <td><input type="text" id="injuries-minor-driver" name="injuries-minor-driver" required></td>
+                            <td><input type="text" id="injuries-minor-ground-staff" name="injuries-minor-ground-staff" required></td>
+                            <td><input type="text" id="injuries-minor-other" name="injuries-minor-other" required></td>
+                        </tr>
+                    </table>
+                </fieldset>
+                <fieldset>
+                    <legend>1.3. Damage to Aircraft/Vehicle/Equipment</legend>
+                    <textarea id="damage-to" name="damage-to" rows="5" cols="50" required></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.4. Other Damage</legend>
+                    <textarea id="other-damage" name="other-damage" rows="5" cols="50" required></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.5. Personnel Information</legend>
+                    <label for="personnel-information">Details of the Equipment Operator:</label>
+                    <textarea id="personnel-information" name="personnel-information" rows="5" cols="50" required></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.6. Equipment Information</legend>
+                    <textarea id="equipment-information" name="equipment-information" rows="5" cols="50" required></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.7. Metrological Information</legend>
+                    <textarea id="metrological-report" name="metrological-report" rows="5" cols="50" required></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.8. Aerodrome Information</legend>
+                    <textarea id="aerodrome-information" name="aerodrome-information" rows="5" cols="50" required></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.9. Fire</legend>
+                    <textarea id="fire" name="fire" rows="5" cols="50" required></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.10. Organization & Management information</legend>
+                    <textarea id="organization-and-management-information" name="organization-and-management-information" rows="5" cols="50" required></textarea>
+                </fieldset>
+            </fieldset>
+            <fieldset>
+                <legend>2. Analysis</legend>
+                <textarea id="analysis" name="analysis" rows="5" cols="50" required></textarea>
+            </fieldset>
+            <fieldset>
+                <legend>3. Conclusions</legend>
+                <fieldset>
+                    <legend>3.1 Findings</legend>
+                    <textarea id="findings" name="findings" rows="5" cols="50" required></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>3.2 Probable Cause</legend>
+                    <textarea id="probable-cause" name="probable-cause" rows="5" cols="50" required></textarea><br><br>
+                    <label for="contributory-factor">Contributory Factor:</label>
+                    <textarea id="contributory-factor" name="contributory-factor" rows="5" cols="50" required></textarea>
+                </fieldset>
+            </fieldset>
+            <fieldset>
+                <legend>4. Safety Recommendations</legend>
+                <label for="safety-manager">Safety Manager Kannur International Airport Limited:</label>
+                <textarea id="safety-manager" name="safety-manager" rows="5" cols="50" required></textarea><br><br>
+                <!--<label for="COO-in-charge">Chief Operating Officer- In-charge Kannur International Airport Limited</label>
+                <textarea id="COO-in-charge" name="COO-in-charge" rows="5" cols="50" required></textarea><br><br>-->
+                <label for="date">Date:</label>
+                <input type="date" id="date" name="date">
+            </fieldset>
+            <fieldset>
+                <legend>5. Appendices</legend>
+                <textarea id="appendices" name="appendices" rows="5" cols="50" required></textarea>
+            </fieldset>
+            <fieldset>
+                <legend>6. Department(s) to notify</legend>
+                <div class="dropdown-container">
+                <div class="dropdown-button" onclick="toggleDropdown()">Select Departments</div>
+                <div class="dropdown-list" id="dropdown-list">
+                    <div class="dropdown-item" onclick="selectDepartment(this, 'Safety')">Safety</div>
+                    <div class="dropdown-item" onclick="selectDepartment(this, 'Operations')">Operations</div>
+                    <div class="dropdown-item" onclick="selectDepartment(this, 'Fire')">Fire</div>
+                    <div class="dropdown-item" onclick="selectDepartment(this, 'Security')">Security</div>
+                    <div class="dropdown-item" onclick="selectDepartment(this, 'ATC')">ATC</div>
+                </div>
+            </div>
+            </fieldset>
+            <div class="selected-departments" id="selected-departments"></div>
+
+            <input type="hidden" id="hidden-input" name="departments">
+            <button type="submit" id="submit">Submit</button>
+        </form>                 
+        </div>
+        </main>
+    </div>
+
+    <script>
+        let vehicleCount = 1;
+
+        // Function to add a new vehicle column
+        function addVehicleColumn() {
+            vehicleCount++;
+            const table = document.getElementById('details-of-vechicles/equipments');
+            const headerRow = document.getElementById('headerRow');
+
+            // Add a new header for the vehicle
+            const newHeader = document.createElement('th');
+            newHeader.textContent = `Vehicle ${vehicleCount}`;
+            headerRow.appendChild(newHeader);
+
+            // Add a new column to each row in the table
+            const rows = table.rows;
+            for (let i = 1; i < rows.length; i++) {
+                const newCell = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = `${rows[i].cells[0].textContent.toLowerCase().replace(/ /g, '_')}_${vehicleCount}`;
+                newCell.appendChild(input);
+                rows[i].appendChild(newCell);
+            }
+        }
+
+        // Function to remove the last vehicle column
+        function removeLastVehicleColumn() {
+            if (vehicleCount > 1) {  // Check if there's more than one vehicle column
+                const table = document.getElementById('details-of-vechicles/equipments');
+                const headerRow = document.getElementById('headerRow');
+                const rows = table.rows;
+
+                // Remove the last header cell (last vehicle)
+                headerRow.deleteCell(vehicleCount);
+
+                // Remove the corresponding cells for each row in the table
+                for (let i = 1; i < rows.length; i++) {
+                    rows[i].deleteCell(vehicleCount);
+                }
+
+                // Decrement the vehicle count
+                vehicleCount--;
+            }
+        }
+
+        // Function to add a new row
+        function addEventRow() {
+            const table = document.getElementById('Events-table');
+            const row = table.insertRow(-1);
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1); // Cell for the Remove button
+            const cell3 = row.insertCell(2);
+
+            cell1.innerHTML = `<input type="time" name="event-time" placeholder="Time" required>`;
+            cell2.innerHTML = `<textarea name="event-description" id="event-description" placeholder="Enter details..." required>`; 
+            cell3.innerHTML = `<button type="button" class="remove-button" onclick="removeEventRow(this)">Remove</button>`; 
+        }
+
+        // Function to remove an event row
+        function removeEventRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+        function toggleDropdown() {
+        const dropdownList = document.getElementById('dropdown-list');
+        dropdownList.style.display = dropdownList.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function selectDepartment(element, department) {
+        const selectedContainer = document.getElementById('selected-departments');
+        const hiddenInput = document.getElementById('hidden-input');
+
+        // Toggle selected class
+        if (element.classList.contains('selected')) {
+            element.classList.remove('selected');
+
+            // Remove from selected departments
+            const selectedDiv = document.querySelector(`.selected-department[data-department="${department}"]`);
+            if (selectedDiv) selectedContainer.removeChild(selectedDiv);
+        } else {
+            element.classList.add('selected');
+
+            // Add to selected departments
+            const newDiv = document.createElement('div');
+            newDiv.className = 'selected-department';
+            newDiv.setAttribute('data-department', department);
+            newDiv.innerHTML = `${department} <span onclick="removeDepartment('${department}')">✕</span>`;
+            selectedContainer.appendChild(newDiv);
+        }
+
+        // Update hidden input value
+        const selectedDepartments = Array.from(selectedContainer.children).map(
+            (child) => child.getAttribute('data-department')
+        );
+        hiddenInput.value = selectedDepartments.join(', ');
+    }
+
+    function removeDepartment(department) {
+        const dropdownItems = document.querySelectorAll('.dropdown-item');
+        const selectedContainer = document.getElementById('selected-departments');
+        const hiddenInput = document.getElementById('hidden-input');
+
+        // Remove from selected departments
+        const selectedDiv = document.querySelector(`.selected-department[data-department="${department}"]`);
+        if (selectedDiv) selectedContainer.removeChild(selectedDiv);
+
+        // Unselect the corresponding dropdown item
+        dropdownItems.forEach((item) => {
+            if (item.textContent === department) item.classList.remove('selected');
+        });
+
+        // Update hidden input value
+        const selectedDepartments = Array.from(selectedContainer.children).map(
+            (child) => child.getAttribute('data-department')
+        );
+        hiddenInput.value = selectedDepartments.join(', ');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function (e) {
+        const dropdownContainer = document.querySelector('.dropdown-container');
+        if (!dropdownContainer.contains(e.target)) {
+            document.getElementById('dropdown-list').style.display = 'none';
+        }
+    });
+    </script>
+</body>
+</html>
