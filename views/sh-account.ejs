@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Security Head</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h3 {
+            margin-top: 0;
+            color: #b30000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input, .form-group button {
+            width: 95%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .profile-picture {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .profile-picture img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 2px solid #b30000;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #b30000;
+            color: #fff;
+            text-align: center;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar', { active: 'account' }) %>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome,<%=name%></span>
+                    <div class="profile-icon"style="background-image: url('<%= profilePicture || '/images/default-profile.png' %>');"></div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Profile Picture Section -->
+                <div class="section">
+                    <h3>Profile Picture</h3>
+                    <div class="profile-picture">
+                        <img src="<%= profilePicture %>" alt="Profile Picture">
+                        <form action="/security-head/account/upload-picture" method="POST" enctype="multipart/form-data">
+                            <input type="file" name="profile_picture" accept="image/*" required>
+                            <button type="submit" class="btn">Upload New Picture</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Profile Section -->
+                <div class="section">
+                    <h3>Profile</h3>
+                    <form id="profile-form" action="/security-head/account/update-profile" method="POST">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" value="<%= name %>" required>
+                        </div>
+                        <button type="submit" class="btn">Save Changes</button>
+                    </form>
+                </div>
+
+                <!-- Account Section -->
+                <div class="section">
+                    <h3>Account</h3>
+                    <form id="password-form" action="/security-head/account/update-password" method="POST">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" name="currentPassword" placeholder="Enter current password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" name="newPassword" placeholder="Enter new password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" name="confirmPassword" placeholder="Confirm new password" required>
+                        </div>
+                        <button type="submit" class="btn">Update Password</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Admin Dashboard - Home</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .dashboard-widgets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .widget {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .widget h3 {
+            margin: 0 0 10px;
+            color: #b30000;
+        }
+
+        .widget p {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        /* Styling for the logout button */
+         /* .logout-form {
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        } */
+        .btn {
+            padding: 10px 15px;
+            background-color: #b30000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+        .logout-form button {
+            display: inline-block;
+        width: 100%;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        /* text-transform: uppercase; */
+        color: #fff; /* White text */
+        background-color: #b30000; /* Dark red background */
+        border: 1px solid #fff; /* Slightly darker red border */
+        border-radius: 8px; /* Rounded corners */
+        cursor: pointer;
+        transition: all 0.3s ease; /* Smooth hover effect */
+  
+        }
+
+        .logout-form button:hover {
+            background-color: #fff;
+            color: #b30000;
+        } 
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar-IT', { active: 'home' }) %>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, <%= adminName || 'Admin' %></span>
+                    <div class="profile-icon">
+                        <% if (profileIcon.startsWith('/')) { %>
+                            <img src="<%= profileIcon %>" alt="Profile Picture" width="40" height="40" style="border-radius: 50%;">
+                        <% } else { %>
+                            <%= profileIcon %> <!-- Shows the default emoji if no image is uploaded -->
+                        <% } %>
+                    </div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h2>Welcome to the Security Management System</h2>
+                <p>Here’s an overview of your recent activities and system updates.</p>
+
+                <!-- Dashboard Widgets -->
+                <div class="dashboard-widgets">
+                    <div class="widget">
+                        <h3>Departments Monitored</h3>
+                        <p><%= departmentsMonitored %></p>
+                    </div>
+                    <div class="widget">
+                        <h3>System Health</h3>
+                        <p><%= systemHealth %></p>
+                    </div>
+                    <div class="widget">
+                        <h3>Active Users</h3>
+                        <p><%= activeUsers %></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Dashboard - Notifications</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .notification-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .notification-item {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-item p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .notification-item .time {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .empty-message {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar-dept', { active: 'notifications' }) %>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, <%= departmentName %></span>
+                    <div class="profile-icon">👤</div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h2>Notifications</h2>
+                <p>View important alerts and updates from the system.</p>
+
+                
+            </div>
+        </main>
+    </div>
+</body>
+</html>

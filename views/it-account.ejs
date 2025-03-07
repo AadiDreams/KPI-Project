@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - IT Admin</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h3 {
+            margin-top: 0;
+            color: #b30000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 95%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .profile-picture-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-picture-container img {
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-right: 20px;
+        }
+
+        .file-input-container input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .file-input-container {
+            margin-left: 20px;
+        }
+
+        .profile-icon {
+            font-size: 30px;
+            margin-left: 5px;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #b30000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+        .logout-form button {
+            display: inline-block;
+        width: 100%;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        /* text-transform: uppercase; */
+        color: #fff; /* White text */
+        background-color: #b30000; /* Dark red background */
+        border: 1px solid #fff; /* Slightly darker red border */
+        border-radius: 8px; /* Rounded corners */
+        cursor: pointer;
+        transition: all 0.3s ease; /* Smooth hover effect */
+  
+        }
+
+        .logout-form button:hover {
+            background-color: #fff;
+            color: #b30000;
+        } 
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar-IT', { active: 'account' }) %>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, <%= adminName || 'Admin' %></span>
+                    <div class="profile-icon">
+                        <% if (profileIcon.startsWith('/')) { %>
+                            <img src="<%= profileIcon %>" alt="Profile Picture" width="40" height="40" style="border-radius: 50%;">
+                        <% } else { %>
+                            <%= profileIcon %> <!-- Shows the default emoji if no image is uploaded -->
+                        <% } %>
+                    </div>
+                    
+                    
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Profile Picture Section -->
+                <div class="section">
+                    <h3>Profile Picture</h3>
+                    <div class="profile-picture-container">
+                        <img src="<%= profileIcon || '/assets/images/default-profile.jpg' %>" alt="Profile Picture">
+                        <div class="file-input-container">
+                            <form action="/it-admin/account/upload-picture" method="POST" enctype="multipart/form-data">
+                                <label for="profile-picture">Upload Profile Picture</label>
+                                <input type="file" id="profile-picture" name="profile_picture" accept="image/*">
+                                <button type="submit" class="btn">Upload</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Section -->
+                <div class="section">
+                    <h3>Profile</h3>
+                    <form id="profile-form" action="/it-admin/account/update-profile" method="POST">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" value="<%= adminName %>" required>
+                        </div>
+                        <button type="submit" class="btn">Save Changes</button>
+                    </form>
+                </div>
+
+                <!-- Account Section -->
+                <div class="section">
+                    <h3>Account</h3>
+                    <form id="password-form" action="/it-admin/account/update-password" method="POST">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" name="currentPassword" placeholder="Enter current password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" name="newPassword" placeholder="Enter new password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" name="confirmPassword" placeholder="Confirm new password" required>
+                        </div>
+                        <button type="submit" class="btn">Update Password</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- <script>
+        // Handle profile form submission
+        document.getElementById("profile-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const name = document.getElementById("name").value;
+            alert(`Name updated to: ${name}`);
+        });
+
+        // Handle password form submission
+        document.getElementById("password-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const currentPassword = document.getElementById("current-password").value;
+            const newPassword = document.getElementById("new-password").value;
+            const confirmPassword = document.getElementById("confirm-password").value;
+
+            if (newPassword !== confirmPassword) {
+                alert("New passwords do not match!");
+                return;
+            }
+
+            alert("Password updated successfully!");
+        });
+    </script>
+</body>
+</html> -->

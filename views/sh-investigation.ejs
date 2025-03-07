@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Security Head</title>
+    <link rel="stylesheet" href="/css/incident-report.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="js/security-head.js" defer></script>
+    <style>
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 1px solid #b30000;
+            color: #b30000;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background-color: #b30000;
+            color: #fff;
+        }
+
+        .reports-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .report-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 5px 10px;
+            color: #fff;
+            background-color: #b30000;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+
+        .dropdown-container {
+            position: relative;
+            width: 300px;
+        }
+
+        .dropdown-button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #b30000;
+            background-color: #FAF3F0;
+            cursor: pointer;
+            text-align: left;
+            border-radius: 5px;
+        }
+
+        .dropdown-button:after {
+            content: '▼';
+            float: right;
+            margin-top: 3px;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #b30000;
+            border-radius: 5px;
+            margin-top: 5px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .dropdown-item {
+            padding: 8px 10px;
+            background-color: #FAF3F0;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .dropdown-item:hover {
+            background-color: #FAF3F0;
+        }
+
+        .dropdown-item.selected {
+            background-color: #ffcccc;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .selected-departments {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .selected-department {
+            margin: 5px;
+            padding: 5px 10px;
+            background-color: #ffcccc;
+            color: #000;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .selected-department span {
+            margin-left: 10px;
+            color: #999;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/sidebar', { active: 'investigation' }) %>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, Security Head</span>
+                    <div class="profile-icon">👤</div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h1 style="color: #b30000;"><%= reportTitle %></h1>
+        <form action="/submit-investigation" method="post">
+            <fieldset>
+                <legend>Details of Occurrence</legend>
+                <table border="1" id="details-of-occurence">
+                    <tr>
+                        <td>Date & Time of Incident(IST)</td>
+                        <td><input type="datetime-local"  id="date-time" name="date-time" value="<%= incident.dateTime %>" required></td>
+                    </tr>
+
+                    <tr>
+                        <td>Name of Airport</td>
+                        <td><input type="text" id="name-of-airport" name="name-of-airport" value="<%= incident.airportName %>" required></td>
+                    </tr>
+
+                    <tr>
+                        <td>Location of Incident</td>
+                        <td><input type="text" id="location-of-incident" name="location-of-incident" value="<%= incident.location %>" required></td>
+                    </tr>
+
+                    <tr>
+                        <td>Type of Operation</td>
+                        <td><input type="text" id="type-of-operation" name="type-of-operation" value="<%= incident.operationType %>" required></td>
+                    </tr>
+                </table>
+            </fieldset>
+            <fieldset>
+                <legend>Details of Aircraft Involved, if applicable</legend>
+                <table border="1" id="details-of-aircraft-involved">
+                    <tr>
+                        <td>Name of Airline/Operator</td>
+                        <td><input type="text" id="airline" name="aircraft" value="<%= aircraft.airline %>"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Aircraft Type</td>
+                        <td><input type="text" id="aircraft-type" name="aircraft-type" value="<%= aircraft.type %>"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Registration no.</td>
+                        <td><input type="text" id="registration-no" name="registration-no" value="<%= aircraft.registration %>"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Flight No.</td>
+                        <td><input type="text" id="flight-no" name="flight-no" value="<%= aircraft.flightNo %>"></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Sector</td>
+                        <td><input type="text" id="sector" name="sector" value="<%= aircraft.sector %>"></td>
+                    </tr>
+
+                    <tr>
+                        <td>Phase of Operation</td>
+                        <td><input type="text" id="phase-of-operation-aircraft" value="<%= aircraft.phase %>"></td>
+                    </tr>
+                </table>
+            </fieldset>
+            <fieldset>
+                <legend>Details of Vehicles/Equipments, if applicable (add more column if required)</legend>
+                <table border="1" id="details-of-vechicles/equipments">
+                    <tr id="headerRow">
+                        <th></th>
+                        <th>Vehicle 1</th>
+                        <% for(let i = 2; i <= numVehicles; i++) { %>
+                            <th>Vehicle <%= i %></th>
+                        <% } %>
+                    </tr>
+
+                    <tr>
+                        <td>Type of Vehicle/Equipment</td>
+                        <td><input type="text" id="type-of-vehicle/equipment" name="type-of-vehicle/equipment-1" value="<%= vehicles[0].type %>"></td>
+                        <% for(let i = 1; i < numVehicles; i++) { %>
+                            <td><input type="text" id="type-of-vehicle/equipment" name="type-of-vehicle/equipment-<%= i+1 %>" value="<%= vehicles[i].type %>"></td>
+                        <% } %>
+                    </tr>
+
+                    <tr>
+                        <td>Airside Vehicle Permit (AVP)</td>
+                        <td><input type="text" id="airside-vehicle-permit" name="airside-vehicle-permit_1" value="<%= vehicles[0].avp %>"></td>
+                        <% for(let i = 1; i < numVehicles; i++) { %>
+                            <td><input type="text" id="airside-vehicle-permit" name="airside-vehicle-permit_<%= i+1 %>" value="<%= vehicles[i].avp %>"></td>
+                        <% } %>
+                    </tr>
+
+                    <tr>
+                        <td>Equipment No.</td>
+                        <td><input type="text" id="equipment-no" name="equipment-no_1" value="<%= vehicles[0].equipmentNo %>"></td>
+                        <% for(let i = 1; i < numVehicles; i++) { %>
+                            <td><input type="text" id="equipment-no" name="equipment-no_<%= i+1 %>" value="<%= vehicles[i].equipmentNo %>"></td>
+                        <% } %>
+                    </tr>
+
+                    <tr>
+                        <td>Owner/Operator/GHSP</td>
+                        <td><input type="text" id="owner-operator" name="owner-operator_1" value="<%= vehicles[0].owner %>"></td>
+                        <% for(let i = 1; i < numVehicles; i++) { %>
+                            <td><input type="text" id="owner-operator" name="owner-operator_<%= i+1 %>" value="<%= vehicles[i].owner %>"></td>
+                        <% } %>
+                    </tr>
+                     <tr>
+                        <td>Phase of Operation</td>
+                        <td><input type="text" id="phase-of-operation" name="phase-of-operation_1" value="<%= vehicles[0].phase %>"></td>
+                         <% for(let i = 1; i < numVehicles; i++) { %>
+                            <td><input type="text" id="phase-of-operation" name="phase-of-operation_<%= i+1 %>" value="<%= vehicles[i].phase %>"></td>
+                        <% } %>
+                    </tr>
+                </table><br>
+                <button type="button" onclick="addVehicleColumn()"> Add Vehicle</button>
+                <button type="button" onclick="removeLastVehicleColumn()">Remove Vehicle</button> <!-- Remove last vehicle column -->
+            </fieldset>
+            <fieldset>
+                <legend>1. Factual Information</legend>
+                <fieldset>
+                    <legend>1.1. Brief Description - A brief narrative of the incident —</legend>
+                    <textarea id="brief-description" name="brief-description" rows="5" cols="50" required><%= factualInformation.briefDescription %></textarea>
+                    <fieldset>
+                        <legend>1.1.1. Chronological summary of the incident-</legend>
+                        <table id="Events-table" border="1">
+                            <tr>
+                                <th>Time(24 Hrs)</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                            <% events.forEach(function(event) { %>
+                              <tr>
+                                <td><input type="time" name="event-time" placeholder="Time" value="<%= event.time %>" required></td>
+                                <td><textarea name="event-description" id="event-description" placeholder="Enter details..." required><%= event.description %></textarea></td>
+                                <td><button type="button" class="remove-button" onclick="removeEventRow(this)">Remove</button></td>
+                              </tr>
+                            <% }); %>
+                        </table><br>
+                        <button type="button" onclick="addEventRow()">Add Event</button>
+                    </fieldset>
+                    <fieldset>
+                        <legend>1.1.2. Action taken</legend>
+                        <textarea id="action-taken" name="action-taken" rows="5" cols="50" required><%= factualInformation.actionTaken %></textarea>
+                    </fieldset>
+                </fieldset>
+                <fieldset>
+                    <legend>1.2. Injuries to Persons</legend>
+                    <table border="1" id="injuries-to-person">
+                        <tr>
+                            <th>Injuries</th>
+                            <th>Driver/Equipment <br> Operator</th>
+                            <th>Ground Staff</th>
+                            <th>Others</th>
+                        </tr>
+
+                        <tr>
+                            <td>Fatal</td>
+                            <td><input type="text" id="injuries-fatal-driver" name="injuries-fatal-driver" value="<%= injuries.fatal.driver %>" required></td>
+                            <td><input type="text" id="injuries-fatal-ground-staff" name="injuries-fatal-ground-staff" value="<%= injuries.fatal.groundStaff %>" required></td>
+                            <td><input type="text" id="injuries-fatal-other" name="injuries-fatal-other" value="<%= injuries.fatal.other %>" required></td>
+                        </tr>
+
+                        <tr>
+                            <td>Serious</td>
+                            <td><input type="text" id="injuries-serious-driver" name="injuries-serious-driver" value="<%= injuries.serious.driver %>" required></td>
+                            <td><input type="text" id="injuries-serious-ground-staff" name="injuries-serious-ground-staff" value="<%= injuries.serious.groundStaff %>" required></td>
+                            <td><input type="text" id="injuries-serious-other" name="injuries-serious-other" value="<%= injuries.serious.other %>" required></td>
+                        </tr>
+
+                        <tr>
+                            <td>Minor/None</td>
+                            <td><input type="text" id="injuries-minor-driver" name="injuries-minor-driver" value="<%= injuries.minor.driver %>" required></td>
+                            <td><input type="text" id="injuries-minor-ground-staff" name="injuries-minor-ground-staff" value="<%= injuries.minor.groundStaff %>" required></td>
+                            <td><input type="text" id="injuries-minor-other" name="injuries-minor-other" value="<%= injuries.minor.other %>" required></td>
+                        </tr>
+                    </table>
+                </fieldset>
+                <fieldset>
+                    <legend>1.3. Damage to Aircraft/Vehicle/Equipment</legend>
+                    <textarea id="damage-to" name="damage-to" rows="5" cols="50" required><%= factualInformation.damageTo %></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.4. Other Damage</legend>
+                    <textarea id="other-damage" name="other-damage" rows="5" cols="50" required><%= factualInformation.otherDamage %></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.5. Personnel Information</legend>
+                    <label for="personnel-information">Details of the Equipment Operator:</label>
+                    <textarea id="personnel-information" name="personnel-information" rows="5" cols="50" required><%= factualInformation.personnelInformation %></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.6. Equipment Information</legend>
+                    <textarea id="equipment-information" name="equipment-information" rows="5" cols="50" required><%= factualInformation.equipmentInformation %></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.7. Metrological Information</legend>
+                    <textarea id="metrological-report" name="metrological-report" rows="5" cols="50" required><%= factualInformation.metrologicalReport %></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.8. Aerodrome Information</legend>
+                    <textarea id="aerodrome-information" name="aerodrome-information" rows="5" cols="50" required><%= factualInformation.aerodromeInformation %></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.9. Fire</legend>
+                    <textarea id="fire" name="fire" rows="5" cols="50" required><%= factualInformation.fire %></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>1.10. Organization & Management information</legend>
+                    <textarea id="organization-and-management-information" name="organization-and-management-information" rows="5" cols="50" required><%= factualInformation.organizationManagement %></textarea>
+                </fieldset>
+            </fieldset>
+            <fieldset>
+                <legend>2. Analysis</legend>
+                <textarea id="analysis" name="analysis" rows="5" cols="50" required><%= analysis %></textarea>
+            </fieldset>
+            <fieldset>
+                <legend>3. Conclusions</legend>
+                <fieldset>
+                    <legend>3.1 Findings</legend>
+                    <textarea id="findings" name="findings" rows="5" cols="50" required><%= conclusions.findings %></textarea>
+                </fieldset>
+                <fieldset>
+                    <legend>3.2 Probable Cause</legend>
+                    <textarea id="probable-cause" name="probable-cause" rows="5" cols="50" required><%= conclusions.probableCause %></textarea>
+                </fieldset>
+            </fieldset>
+            <fieldset>
+                <legend>4. Safety Recommendations</legend>
+                <textarea id="safety-recommendations" name="safety-recommendations" rows="5" cols="50" required><%= safetyRecommendations %></textarea>
+            </fieldset>
+                <input type="submit" value="Submit">
+        </form>
+            </div>
+        </main>
+    </div>
+    <script>
+        function addVehicleColumn() {
+            var table = document.getElementById("details-of-vechicles/equipments");
+            var headerRow = document.getElementById("headerRow");
+            var numColumns = headerRow.cells.length;
+
+            // Create a new header cell
+            var headerCell = document.createElement("th");
+            headerCell.textContent = "Vehicle " + numColumns;
+            headerRow.appendChild(headerCell);
+
+            // Loop through the remaining rows and add a new cell in each row
+            for (var i = 1; i < table.rows.length; i++) {
+                var newCell = table.rows[i].insertCell(-1);
+                newCell.innerHTML = '<input type="text" id="type-of-vehicle/equipment" name="type-of-vehicle/equipment-' + numColumns + '">';
+            }
+        }
+
+        function removeLastVehicleColumn() {
+            var table = document.getElementById("details-of-vechicles/equipments");
+            var headerRow = document.getElementById("headerRow");
+            var numColumns = headerRow.cells.length;
+
+            if (numColumns <= 2) {
+                alert("Cannot remove the first vehicle column.");
+                return;
+            }
+
+            // Remove the last header cell
+            headerRow.deleteCell(-1);
+
+            // Loop through the remaining rows and remove the last cell in each row
+            for (var i = 1; i < table.rows.length; i++) {
+                table.rows[i].deleteCell(-1);
+            }
+        }
+
+        function addEventRow() {
+            var table = document.getElementById("Events-table");
+            var newRow = table.insertRow(-1);
+
+            var timeCell = newRow.insertCell(0);
+            var descriptionCell = newRow.insertCell(1);
+            var actionCell = newRow.insertCell(2);
+
+            timeCell.innerHTML = '<input type="time" name="event-time" placeholder="Time" required>';
+            descriptionCell.innerHTML = '<textarea name="event-description" id="event-description" placeholder="Enter details..." required></textarea>';
+            actionCell.innerHTML = '<button type="button" class="remove-button" onclick="removeEventRow(this)">Remove</button>';
+        }
+
+        function removeEventRow(button) {
+            var row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+    </script>
+</body>
+</html>

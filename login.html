@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Page</title>
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="/css/login.css">
 </head>
 <body>
     <div class="login-container">
@@ -13,7 +13,7 @@
             <button id="adminToggle" class="active">Admin Login</button>
             <button id="departmentToggle">Department Login</button>
         </div>
-        <form id="loginForm">
+        <form id="loginForm"  action="/login" method="POST">
             <div class="input-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" placeholder="Enter your username" required>

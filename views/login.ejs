@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="/css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <h1>Login</h1>
+        <div class="login-type-toggle">
+            <button id="adminToggle" class="active">Admin Login</button>
+            <button id="departmentToggle">Department Login</button>
+        </div>
+        <form id="loginForm" action="/login" method="POST">
+            <% if (typeof error !== 'undefined') { %>
+                <p style="color: red;"><%= error %></p>
+            <% } %>
+
+            <!-- Admin Login Fields -->
+            <div id="adminFields">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username">
+                </div>
+            </div>
+
+            <!-- Department Login Fields -->
+            <div id="departmentFields" style="display: none;">
+                <div class="input-group">
+                    <label for="departmentID">Department ID</label>
+                    <input type="text" id="departmentID" name="departmentID" placeholder="Enter Department ID">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+
+            <input type="hidden" id="loginType" name="loginType" value="admin">
+            <button type="submit" class="login-button">Login</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('adminToggle').addEventListener('click', function() {
+            document.getElementById('adminFields').style.display = 'block';
+            document.getElementById('departmentFields').style.display = 'none';
+            document.getElementById('loginType').value = 'admin';
+
+            // Enable admin input and clear department ID
+            document.getElementById('username').disabled = false;
+            document.getElementById('username').required = true;
+            document.getElementById('departmentID').disabled = true;
+            document.getElementById('departmentID').required = false;
+            document.getElementById('departmentID').value = '';
+
+            this.classList.add('active');
+            document.getElementById('departmentToggle').classList.remove('active');
+        });
+
+        document.getElementById('departmentToggle').addEventListener('click', function() {
+            document.getElementById('adminFields').style.display = 'none';
+            document.getElementById('departmentFields').style.display = 'block';
+            document.getElementById('loginType').value = 'department';
+
+            // Enable department input and clear username
+            document.getElementById('departmentID').disabled = false;
+            document.getElementById('departmentID').required = true;
+            document.getElementById('username').disabled = true;
+            document.getElementById('username').required = false;
+            document.getElementById('username').value = '';
+
+            this.classList.add('active');
+            document.getElementById('adminToggle').classList.remove('active');
+        });
+    </script>
+</body>
+</html>

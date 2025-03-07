@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Report</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/incident-report.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script defer src="/assets/js/incident-report.js" ></script>
+   
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>Airport</h1>
+            </div>
+            <nav class="menu">
+                <a href="/department/<%=departmentID %>/home" class="menu-item <%= typeof active!==undefined && active === 'home' ? 'active' : '' %>" data-content="home"><span class="icon">🏠</span> Home</a>
+                <a href="/department/<%=departmentID %>/report" class="menu-item <%= active === 'report' ? 'active' : '' %>" data-content="reports"><span class="icon">📝</span> Report Incident</a>
+                <a href="/department/<%=departmentID %>/notifications" class="menu-item <%= active === 'notifications' ? 'active' : '' %>" data-content="notifications"><span class="icon">🔔</span> Notifications</a>
+                <a href="/department/<%=departmentID %>/account" class="menu-item <%= active === 'account' ? 'active' : '' %>" data-content="account"><span class="icon">⚙️</span> Account</a>
+            </nav>
+            
+            <!-- Logout Button -->
+            <form action="/logout" method="post">
+                <button type="submit" class="logout">
+                    Logout
+                </button>
+            </form>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, <%= departmentName %></span>
+                    <div class="profile-icon">👤</div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h2>Incident Reporting Proforma (General)</h2>
+                <form action="/submit-incident" method="POST" enctype="multipart/form-data">
+                    <fieldset>
+                        <legend>General Information</legend>
+                        <label for="date">Date(DD:MM:YYYY):</label>
+                        <input type="date" id="date" name="date" required><br><br>
+            
+                        <label for="uid">UID Number:</label>
+                        <input type="text" name="uid" id="uid" required><br><br>
+            
+                        <label for="incident-time">Incident Time(24 Hrs):</label>
+                        <input type="time" id="incident-time" name="incident-time" required><br><br>
+            
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" name="location" required><br><br>
+            
+                        <label for="description">Description of Location:</label>
+                        <textarea id="description" name="description" rows="5" cols="50" required></textarea><br><br>
+            
+                        <label for="type-of-incident">Type of Incident:</label>
+                        <select name="type-of-incident" id="type-of-incident" required>
+                            <option value="" selected>Select an Incident</option>
+                            <option value="Incident1">Incident1</option>
+                            <option value="Incident2">Incident2</option>
+                            <option value="Incident3">Incident3</option>
+                            <option value="Other">Other</option>
+                        </select><br><br>
+            
+                        <label for="no-of-injured">No of Injured:</label>
+                        <input type="text" id="no-of-injured" name="no-of-injured" required><br><br>
+            
+                        <label for="injured-person-category">Injured Person Category:</label>
+                        <input type="text" id="injured-person-category" name="injured-person-category" required><br><br>
+            
+                        <label for="type-of-casualty">Type of Casualty:</label>
+                        <input type="text" id="type-of-casualty" name="type-of-casualty" required><br><br>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Details</legend>
+                        <label for="incident-details">Incident Details:</label>
+                        <textarea id="incident-details" name="incident-details" rows="5" cols="50" required></textarea><br><br>
+            
+                        <label for="image-upload">Upload Image(if any):</label>
+                        <input type="file" id="image-upload" name="image-upload"><br><br>
+            
+                        <label for="alert-received-by">Alert Received By:</label>
+                        <input type="text" id="alert-received-by" name="alert-received-by" required><br><br>
+            
+                        <label for="alerted-by">Alerted By:</label>
+                        <input type="text" id="alerted-by" name="alerted-by" required><br><br>
+            
+                        <label for="alert-time">Alert Time(24 Hrs):</label>
+                        <input type="time" id="alert-time" name="alert-time" required><br><br>
+            
+                        <label for="medical-support">Medical Support:</label>
+                        <input type="text" id="medical-support" name="medical-support" required><br><br>
+            
+                        <label for="name-of-doctor">Name of Doctor:</label>
+                        <input type="text" id="name-of-doctor" name="name-of-doctor" required><br><br>
+            
+                        <label for="name-of-nurse">Name of Nurse:</label>
+                        <input type="text" id="name-of-nurse" name="name-of-nurse" required><br><br>
+            
+                        <label for="ambulance-service">Ambulance Service:</label>
+                        <input type="text" id="ambulance-service" name="ambulance-service" required><br><br>
+                    </fieldset>
+                    <fieldset>
+                         <legend>Chronological Summary of Events</legend>
+                         <table id="Events-table" border="1">
+                            <tr>
+                                <th>Time(24 Hrs)</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                            <tr>
+                                <td><input type="time" name="event-time" placeholder="Time" required></td>
+                                <td><textarea name="event-description" id="event-description" placeholder="Enter details..." required></textarea></td>
+                                <td><button type="button" class="remove-button" onclick="removeEventRow(this)">Remove</button></td>
+                            </tr>
+                        </table><br>
+                        <button type="button" onclick="addEventRow()">Add Event</button>
+            
+                    </fieldset>
+                    <fieldset>
+                        <label for="police-notification">Police Notification:</label>
+                        <input type="text"  id="police-notification" name="police-notification" required><br><br>
+            
+                        <label for="to-whom">To Whom(Mention Police Station):</label>
+                        <input type="text" id="to-whom" name="to-whom" required><br><br>
+            
+                        <label for="reporting-time">Time(24 Hrs)</label>
+                        <input type="time" id="reporting-time" name="reporting-time" required><br><br>
+            
+                        <label for="legal-action">Leagal Action:</label>
+                        <textarea id="legal-action" name="legal-action" rows="5" cols="50" required></textarea><br><br>
+            
+                        <label for="details">Details:</label>
+                        <textarea id="details" name="details" rows="5" cols="50" required></textarea><br><br>
+            
+                        <label for="damage-to">Damage to  Kannur International Airport Ltd. Property:</label>
+                        <textarea id="damage-to" name="damage-to" rows="5" cols="50" required></textarea>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Witness</legend>
+                        <table id="witness-table" border="1">
+                            <tr>
+                                <th>Name</th>
+                                <th>Organization</th>
+                                <th>Contact Number</th>
+                                <th>Action</th>
+                            </tr>
+                            <tr>
+                                <td><input type="text" name="witness-name" id="witness-name" placeholder="Name" required></td>
+                                <td><input type="text" name="witness-org" id="witness-org" placeholder="Organization" required></td>
+                                <td><input type="text" name="witness-contact" id="witness-contact" placeholder="Contact Number" required></td>
+                                <td><button type="button" class="remove-button" onclick="removeWitnessRow(this)">Remove</button></td>
+                            </tr>
+                        </table><br>
+                        <button type="button" onclick="addWitnessRow()">Add Witness</button>
+            
+                    </fieldset>
+                    <fieldset>
+                        <label for="contributing-factors">Contributing factors:</label>
+                        <textarea id="contributing-factors" name="contributing-factors" rows="5" cols="50" required></textarea><br><br>
+            
+                        <label for="contributing-factors-details">Details:</label>
+                        <textarea id="contributing-factors-details" name="contributing-factors-details" rows="5" cols="50" required></textarea><br><br>
+            
+                        <label for="recommendations-for-remedial-actions">Recommendations for Remedial Actions:</label>
+                        <textarea id="recommendations-for-remedial-actions" name="recommendations-for-remedial-actions" rows="5" cols="50" required></textarea><br><br>
+            
+                        <label for="status-of-incident">Status of the Incident:</label>
+                        <input type="text" id="status-of-incident" name="status-of-incident" required><br><br>
+            
+                        <label for="follow-up-actions">Follow Up Actions:</label>
+                        <textarea id="follow-up-actions" name="follow-up-actions" rows="5" cols="50" required></textarea><br><br>
+            
+                        <label for="any-other-comments">Any other comments:</label>
+                        <textarea id="any-other-comments" name="any-other-comments" rows="5" cols="50" required></textarea><br><br>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Report Submitted By</legend>
+                        <label for="submitted-name">Name:</label>
+                        <input type="text" id="submitted-name" name="submitted-name" required><br><br>
+            
+                        <label for="designation">Designation:</label>
+                        <input type="text" id="designation" name="designation" required><br><br>
+                    </fieldset><br>
+                    <button type="submit" id="submit">Submit</button>
+                </form>              
+        </div>
+    </main>
+</div>
+</body>
+</html>

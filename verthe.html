@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Report Form</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #printable-content {
+            border: 2px solid black;
+            padding: 20px;
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+        }
+        h2 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 16px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        @media print {
+            button, .no-print {
+                display: none;
+            }
+            #printable-content {
+                border: none;
+            }
+            input, textarea {
+                border: none;
+                padding: 0;
+            }
+            .print-value {
+                display: inline;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="printable-content">
+    <h2>Incident Report</h2>
+    <form id="incidentForm">
+        <div>
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date">
+        </div>
+        <br>
+        
+        <div>
+            <label for="uid">UID Number:</label>
+            <input type="text" name="uid" id="uid">
+        </div>
+        <br>
+        
+        <div>
+            <label for="incident-time">Incident Time (24 Hrs):</label>
+            <input type="time" id="incident-time" name="incident-time">
+        </div>
+        <br>
+        
+        <div>
+            <label for="location">Location:</label>
+            <input type="text" id="location" name="location">
+        </div>
+        <br>
+        
+        <div>
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="3"></textarea>
+        </div>
+        <br>
+        
+        <h3>Witnesses</h3>
+        <table id="witness-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Organization</th>
+                    <th>Contact</th>
+                    <th class="no-print">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" name="witness-name[]"></td>
+                    <td><input type="text" name="witness-org[]"></td>
+                    <td><input type="text" name="witness-contact[]"></td>
+                    <td class="no-print"><button type="button" onclick="removeWitness(this)">Remove</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="button-container">
+            <button type="button" class="no-print" onclick="addWitness()">Add Witness</button>
+            <button type="button" class="no-print" onclick="generatePDF()">Download PDF</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function addWitness() {
+        const tbody = document.querySelector('#witness-table tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td><input type="text" name="witness-name[]"></td>
+            <td><input type="text" name="witness-org[]"></td>
+            <td><input type="text" name="witness-contact[]"></td>
+            <td class="no-print"><button type="button" onclick="removeWitness(this)">Remove</button></td>
+        `;
+        tbody.appendChild(newRow);
+    }
+    
+    function removeWitness(button) {
+        const row = button.closest('tr');
+        if (document.querySelectorAll('#witness-table tbody tr').length > 1) {
+            row.remove();
+        } else {
+            alert("You must have at least one witness row.");
+        }
+    }
+
+    function generatePDF() {
+        // Clone the form content
+        const printContent = document.getElementById('printable-content').cloneNode(true);
+
+        // Replace input fields with their values
+        printContent.querySelectorAll('input, textarea').forEach(input => {
+            const span = document.createElement('span');
+            span.className = 'print-value';
+            span.textContent = input.value || '_________'; // Placeholder for empty fields
+            input.replaceWith(span);
+        });
+
+        // Remove no-print elements
+        printContent.querySelectorAll('.no-print').forEach(el => el.remove());
+
+        // Apply styles for the PDF
+        const options = {
+            margin: 10,
+            filename: 'Incident_Report.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Generate PDF
+        html2pdf().from(printContent).set(options).save();
+    }
+</script>
+</body>
+</html>

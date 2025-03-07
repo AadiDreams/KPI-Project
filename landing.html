@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kannur International Airport - Incident Reporting</title>
+    <style>
+        :root {
+            --primary-red: #b30000;
+            --primary-black: black;
+            --primary-white: white;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-white);
+            color: var(--primary-black);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-red);
+            color: var(--primary-white);
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            max-width: 150px;
+            height: auto;
+        }
+
+        .header-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header-content p {
+            font-size: 1.2rem;
+        }
+
+        .login-section {
+            background-color: var(--primary-white);
+            border: 2px solid var(--primary-red);
+            border-radius: 10px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 40px auto;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .login-btn {
+            background-color: var(--primary-red);
+            color: var(--primary-white);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background-color: var(--primary-black);
+        }
+
+        .features {
+            display: flex;
+            justify-content: space-around;
+            padding: 50px 0;
+            background-color: #f4f4f4;
+        }
+
+        .feature {
+            text-align: center;
+            max-width: 300px;
+            padding: 20px;
+        }
+
+        .feature h3 {
+            color: var(--primary-red);
+            margin-bottom: 15px;
+        }
+
+        footer {
+            background-color: var(--primary-black);
+            color: var(--primary-white);
+            text-align: center;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="/kial.png" alt="Kannur International Airport Logo">
+            </div>
+            <div class="header-content">
+                <h1>Incident Reporting & KPI Dashboard</h1>
+                <p>Ensuring Safety and Performance Excellence</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="login-section">
+            <h2>Access Dashboard</h2>
+            <p>Securely log in to view and manage incident reports and key performance indicators.</p>
+            <button class="login-btn" id="loginButton">Login</button>
+        </section>
+
+        <section class="features">
+            <div class="feature">
+                <h3>Incident Tracking</h3>
+                <p>Comprehensive system to log, monitor, and analyze airport incidents with real-time updates.</p>
+            </div>
+            <div class="feature">
+                <h3>Performance Metrics</h3>
+                <p>Detailed KPI dashboards providing insights into operational efficiency and safety standards.</p>
+            </div>
+            <div class="feature">
+                <h3>Reporting Tools</h3>
+                <p>Advanced reporting capabilities with customizable filters and exportable data formats.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Kannur International Airport. All Rights Reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById('loginButton').addEventListener('click', function() {
+            // Placeholder for login functionality
+            alert('Login functionality will be implemented in the full application.');
+        });
+    </script>
+</body>
+</html>

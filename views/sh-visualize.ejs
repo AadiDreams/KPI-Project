@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualize - Security Head</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar', { active: 'Visualize' }) %>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome,<%=name%></span>
+                    <div class="profile-icon">👤</div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area" id="content-area">
+                <h2>Visualisation</h2>
+                <p>KPI based data visualization.</p>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

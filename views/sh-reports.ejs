@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incidents - Security Head</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+.tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 1px solid #b30000;
+            color: #b30000;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background-color: #b30000;
+            color: #fff;
+        }
+
+        .reports-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .report-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 5px 10px;
+            color: #fff;
+            background-color: #b30000;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar', { active: 'reports' }) %>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome,<%=name%></span>
+                    <div class="profile-icon">👤</div>
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <h2>Incident Reports</h2>
+                <!-- Tabs for toggling -->
+                <div class="tabs">
+                    <div class="tab active" id="new-tab">New</div>
+                    <div class="tab" id="pending-tab">Pending</div>
+                    <div class="tab" id="solved-tab">Solved</div>
+                </div>
+
+                <!-- Reports Sections -->
+                <div class="reports-section" id="new-reports">
+                    <ul class="reports-list">
+                        <li class="report-item">
+                            <span>Incident: Fire in Terminal 2</span>
+                            <div class="report-buttons">
+                                <button class="btn">View</button>
+                                <button class="btn">Take Action</button>
+                            </div>
+                        </li>
+                        <li class="report-item">
+                            <span>Incident: Unauthorized Entry</span>
+                            <div class="report-buttons">
+                                <button class="btn">View</button>
+                                <button class="btn">Take Action</button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="reports-section" id="pending-reports" style="display: none;">
+                    <ul class="reports-list">
+                        <li class="report-item">
+                            <span>Incident: Baggage Theft</span>
+                            <div class="report-buttons">
+                                <button class="btn">View</button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="reports-section" id="solved-reports" style="display: none;">
+                    <ul class="reports-list">
+                        <li class="report-item">
+                            <span>Incident: Lost Passport</span>
+                            <div class="report-buttons">
+                                <button class="btn">View</button>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const tabs = document.querySelectorAll(".tab");
+        const sections = document.querySelectorAll(".reports-section");
+
+        tabs.forEach((tab, index) => {
+            tab.addEventListener("click", () => {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove("active"));
+                // Add active class to the clicked tab
+                tab.classList.add("active");
+
+                // Hide all sections
+                sections.forEach(section => (section.style.display = "none"));
+                // Show the corresponding section
+                sections[index].style.display = "block";
+            });
+        });
+    </script>
+</body>
+</html>

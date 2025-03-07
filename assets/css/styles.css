@@ -66,18 +66,20 @@ body {
 
 /* Logout Button */
 .logout {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 15px;
-    color: #fff;
-    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
     text-align: center;
-    border: 1px solid #fff;
-    border-radius: 5px;
-    margin-top: 20px;
-    font-size: 14px;
-    transition: all 0.3s ease;
+    /* text-transform: uppercase; */
+    color: #fff; /* White text */
+    background-color: #b30000; /* Dark red background */
+    border: 1px solid #fff; /* Slightly darker red border */
+    border-radius: 8px; /* Rounded corners */
+    cursor: pointer;
+    transition: all 0.3s ease; /* Smooth hover effect */
+  
 }
 
 .logout .icon {

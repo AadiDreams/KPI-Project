@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Admin - Departments</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .content-area {
+            padding: 20px;
+        }
+
+        .departments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .departments-header h2 {
+            color: #b30000;
+        }
+
+        .add-btn {
+            padding: 10px 15px;
+            background-color: #b30000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .departments-list {
+            margin-bottom: 20px;
+        }
+
+        .department-item {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #b30000;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #b30000;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 95%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .submit-btn {
+            padding: 10px 15px;
+            background-color: #b30000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #b30000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
+        }
+        .logout-form button {
+            display: inline-block;
+        width: 100%;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        /* text-transform: uppercase; */
+        color: #fff; /* White text */
+        background-color: #b30000; /* Dark red background */
+        border: 1px solid #fff; /* Slightly darker red border */
+        border-radius: 8px; /* Rounded corners */
+        cursor: pointer;
+        transition: all 0.3s ease; /* Smooth hover effect */
+  
+        }
+
+        .logout-form button:hover {
+            background-color: #fff;
+            color: #b30000;
+        } 
+        .submit-btn:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <%- include('partials/sidebar-IT', { active: 'department' }) %>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="profile">
+                    <span>Welcome, <%= adminName %></span>
+                    <div class="profile-icon">
+                        <% if (profileIcon.startsWith('/')) { %>
+                            <img src="<%= profileIcon %>" alt="Profile Picture" width="40" height="40" style="border-radius: 50%;">
+                        <% } else { %>
+                            <%= profileIcon %> <!-- Shows the default emoji if no image is uploaded -->
+                        <% } %>
+                    </div>
+                    
+                </div>
+                <div class="notification">
+                    <span>🔔</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Departments Header -->
+                <div class="departments-header">
+                    <h2>Current Departments</h2>
+                    <button class="add-btn" id="open-modal-btn">+ Add Department</button>
+                </div>
+
+                <!-- Departments List -->
+                <div class="departments-list">
+                    <% if (departments.length > 0) { %>
+                        <% departments.forEach(function(department) { %>
+                            <div class="department-item">
+                                <span><%= department.name %></span>
+                                <span>ID: <%= department.id %></span>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="department-item">
+                            <span>No departments available</span>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Department Modal -->
+    <div class="modal" id="add-department-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Department</h2>
+                <button class="close-btn" id="close-modal-btn">&times;</button>
+            </div>
+            <form action="/it-admin/department/add" method="POST">
+                <div class="form-group">
+                    <label for="department-name">Department Name</label>
+                    <input type="text" id="department-name" name="department-name" placeholder="Enter department name" required>
+                </div>
+                <div class="form-group">
+                    <label for="department-id">Department ID</label>
+                    <input type="text" id="department-id" name="department-id" placeholder="Enter department ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter password" required>
+                </div>
+                <button type="submit" class="submit-btn">Add Department</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const openModalBtn = document.getElementById('open-modal-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const addDepartmentModal = document.getElementById('add-department-modal');
+
+        openModalBtn.addEventListener('click', () => {
+            addDepartmentModal.classList.add('active');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            addDepartmentModal.classList.remove('active');
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === addDepartmentModal) {
+                addDepartmentModal.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

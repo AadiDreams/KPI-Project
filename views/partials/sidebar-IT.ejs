@@ -1,0 +1,17 @@
+<aside class="sidebar">
+    <div class="logo">
+        <h1>Airport</h1>
+    </div>
+    <nav class="menu">
+        <a href="/it-admin/home" class="menu-item <%= active === 'home' ? 'active' : '' %>" data-content="home"><span class="icon">🏠</span> Home</a>
+        <a href="/it-admin/department" class="menu-item <%= active === 'department' ? 'active' : '' %>" data-content="department"><span class="icon">🏢</span> Department</a>
+        <a href="/it-admin/account" class="menu-item <%= active === 'account' ? 'active' : '' %>" data-content="account"><span class="icon">⚙️</span> Account</a>
+    </nav>
+
+    <!-- Logout Button (Fixed) -->
+    <form action="/logout" method="post" class="logout-form">
+        <button type="submit">
+             Logout
+        </button>
+    </form>
+</aside>
