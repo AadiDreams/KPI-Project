@@ -345,24 +345,222 @@ app.post('/submit-incident', upload.single('image-upload'), async (req, res) => 
     }
 });
 
-// Example Express route
-// app.get('/sh-reports', async (req, res) => {
-//     try {
-//         const reportsNew = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'new'");
-//         const reportsPending = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'pending'");
-//         const reportsSolved = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'solved'");
+//Endpoint: Submit safety investigation report
 
-//         res.render('sh-reports', {
-//             name: req.user.name,
-//             reportsNew: reportsNew.rows,
-//             reportsPending: reportsPending.rows,
-//             reportsSolved: reportsSolved.rows
-//         });
-//     } catch (err) {
-//         console.error(err.message);
-//         res.status(500).send("Server Error");
-//     }
-// });
+app.post('/submit-investigation', async (req, res) => {
+    try {
+        // Log all form field names and values for debugging
+        console.log('Complete form data received:', req.body);
+        
+        // Create a more robust approach to get the airline value
+        let airline = null;
+        
+        // Check all possible field names directly
+        const possibleAirlineFields = [
+            'airline', 
+            'airline_backup', 
+            'airline-operator', 
+            'airline_operator',
+            'airlineOperator'
+        ];
+        
+        // Try each possible field name
+        for (const fieldName of possibleAirlineFields) {
+            if (req.body[fieldName] && req.body[fieldName] !== '') {
+                airline = req.body[fieldName];
+                console.log(`Found airline value in field "${fieldName}": ${airline}`);
+                break;
+            }
+        }
+        
+        // If still not found, search all fields for anything with "airline" in the name
+        if (!airline) {
+            for (const [key, value] of Object.entries(req.body)) {
+                if (key.toLowerCase().includes('airline') && value && value !== '') {
+                    console.log(`Found airline-related field: ${key} with value: ${value}`);
+                    airline = value;
+                    break;
+                }
+            }
+        }
+        
+        // If airline is still empty, log an error
+        if (!airline) {
+            console.error('CRITICAL: Could not find airline value in form data');
+            airline = 'Unknown Airline'; // Fallback value instead of null
+        }
+        
+        // Handle if airline is an array
+        if (Array.isArray(airline)) {
+            console.log('Airline was an array:', airline);
+            airline = airline[0] || 'Unknown Airline';
+            console.log('Using first value from array:', airline);
+        }
+        
+        // Parse JSON data from hidden fields with better error handling
+        let vehicles = [];
+        let chronologicalIncidents = [];
+        
+        try {
+            vehicles = JSON.parse(req.body.vehicles_json || '[]');
+        } catch (e) {
+            console.error('Error parsing vehicles JSON:', e);
+            vehicles = [];
+        }
+        
+        try {
+            chronologicalIncidents = JSON.parse(req.body.incidents_json || '[]');
+        } catch (e) {
+            console.error('Error parsing incidents JSON:', e);
+            chronologicalIncidents = [];
+        }
+        
+        // Get phase of operation value with similar robust approach
+        let phaseOfOperationAircraft = null;
+        const possiblePhaseFields = [
+            'phase-of-operation-aircraft',
+            'phase_of_operation_aircraft',
+            'phase_of_operation_aircraft_backup',
+            'phaseOfOperationAircraft'
+        ];
+        
+        for (const fieldName of possiblePhaseFields) {
+            if (req.body[fieldName] && req.body[fieldName] !== '') {
+                phaseOfOperationAircraft = req.body[fieldName];
+                console.log(`Found phase of operation in field "${fieldName}": ${phaseOfOperationAircraft}`);
+                break;
+            }
+        }
+        
+        if (!phaseOfOperationAircraft) {
+            for (const [key, value] of Object.entries(req.body)) {
+                if (key.toLowerCase().includes('phase') && value && value !== '') {
+                    console.log(`Found phase-related field: ${key} with value: ${value}`);
+                    phaseOfOperationAircraft = value;
+                    break;
+                }
+            }
+        }
+        
+        // Handle if phase is an array
+        if (Array.isArray(phaseOfOperationAircraft)) {
+            phaseOfOperationAircraft = phaseOfOperationAircraft[0] || '';
+        }
+
+        // Count the number of columns in your SQL statement
+        const columnCount = 38;
+
+        const sql = `
+            INSERT INTO investigation (
+                date_time, name_of_airport, location_of_incident, type_of_operation,
+                airline_operator, aircraft_type, registration_no, flight_no, sector,
+                phase_of_operation, vehicles, chronological_incidents, brief_description,
+                action_taken, injuries_fatal_driver, injuries_fatal_ground_staff, injuries_fatal_other,
+                injuries_serious_driver, injuries_serious_ground_staff, injuries_serious_other,
+                injuries_minor_driver, injuries_minor_ground_staff, injuries_minor_other,
+                damage_to, other_damage, personnel_information, equipment_information,
+                metrological_information, aerodrome_information, fire,
+                organization_and_management_information, analysis, findings, probable_cause,
+                contributory_factor, safety_manager, report_date, appendices
+            ) VALUES (${Array(columnCount).fill('?').join(', ')})
+        `;
+        
+        // Log the final airline value being used just before insertion
+        console.log('FINAL airline value being inserted:', airline);
+        
+        // Process any field that might be an array
+        const processField = (field) => {
+            if (Array.isArray(field)) {
+                return field[0] || '';
+            }
+            return field || '';
+        };
+        
+        const values = [
+            processField(req.body["date-time"]), 
+            processField(req.body["name-of-airport"]), 
+            processField(req.body["location-of-incident"]),
+            processField(req.body["type-of-operation"]), 
+            airline, // This is now properly processed and should not be null
+            processField(req.body["aircraft-type"]), 
+            processField(req.body["registration-no"]),
+            processField(req.body["flight-no"]), 
+            processField(req.body["sector"]), 
+            phaseOfOperationAircraft,
+            JSON.stringify(vehicles), 
+            JSON.stringify(chronologicalIncidents), 
+            processField(req.body["brief-description"]),
+            processField(req.body["action-taken"]), 
+            processField(req.body["injuries-fatal-driver"]), 
+            processField(req.body["injuries-fatal-ground-staff"]),
+            processField(req.body["injuries-fatal-other"]), 
+            processField(req.body["injuries-serious-driver"]), 
+            processField(req.body["injuries-serious-ground-staff"]),
+            processField(req.body["injuries-serious-other"]), 
+            processField(req.body["injuries-minor-driver"]), 
+            processField(req.body["injuries-minor-ground-staff"]),
+            processField(req.body["injuries-minor-other"]), 
+            processField(req.body["damage-to"]), 
+            processField(req.body["other-damage"]), 
+            processField(req.body["personnel-information"]),
+            processField(req.body["equipment-information"]), 
+            processField(req.body["metrological-report"]), 
+            processField(req.body["aerodrome-information"]),
+            processField(req.body["fire"]), 
+            processField(req.body["organization-and-management-information"]), 
+            processField(req.body["analysis"]),
+            processField(req.body["findings"]), 
+            processField(req.body["probable-cause"]), 
+            processField(req.body["contributory-factor"]),
+            processField(req.body["safety-manager"]), 
+            processField(req.body["date"]), 
+            processField(req.body["appendices"])
+        ];
+        
+        // Verify the number of values matches the number of columns
+        console.log(`Number of values provided: ${values.length}, Expected: ${columnCount}`);
+        if (values.length !== columnCount) {
+            throw new Error(`Column count (${columnCount}) doesn't match value count (${values.length})`);
+        }
+        
+        // Log all values before insertion for debugging
+        console.log('All values being inserted:', values);
+        
+        let connection;
+        try {
+            connection = await pool.getConnection();
+            const result = await connection.query(sql, values);
+            
+            // Log successful submission
+            console.log('Successfully submitted investigation report:', {
+                id: result.insertId,
+                vehicleCount: vehicles.length,
+                incidentsCount: chronologicalIncidents.length,
+                airlineUsed: airline
+            });
+            
+            res.send('Safety Investigation Report submitted successfully!');
+        } catch (err) {
+            console.error('Database Insertion Error:', err.message);
+            
+            // Log the problematic values to help with debugging
+            console.error('Problem with insertion values:', {
+                date: req.body["date-time"],
+                airline: airline,
+                vehiclesLength: vehicles.length,
+                incidentsLength: chronologicalIncidents.length,
+                valueCount: values.length
+            });
+            
+            res.status(500).send('Error inserting data into the database.');
+        } finally {
+            if (connection) connection.release();
+        }
+    } catch (error) {
+        console.error('Error processing form submission:', error.message, error.stack);
+        res.status(400).send('Invalid form data. Please check your inputs.');
+    }
+});
 
 
 

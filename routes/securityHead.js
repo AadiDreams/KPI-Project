@@ -109,6 +109,12 @@
         res.render('sh-notifications', { name });
     });
 
+    router.get('/investigation', authenticateSecurityHead, async (req, res) => {
+        const { name } = req.session.user;
+        const departments = await pool.query("SELECT departmentID, departmentName FROM departments");
+        res.render('sh-investigation', { name, departments:departments.length>0?departments:[] });
+    });
+
     // Upload Profile Picture
     router.post('/account/upload-picture', authenticateSecurityHead, upload.single('profile_picture'), async (req, res) => {
         if (!req.file) {
@@ -208,5 +214,5 @@
         }
     });
 
-
+    
     module.exports = router;

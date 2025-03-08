@@ -103,7 +103,7 @@
                                 <span>UID: <%= report.uid %> | Incident: <%= report.type_of_incident %> | Date: <%= report.created_at %></span>
                                 <div class="report-buttons">
                                     <button class="btn">Print</button>
-                                    <button class="btn">Take Action</button>
+                                    <button class="btn" onclick="window.location.href='/security-head/investigation'">Take Action</button>
                                 </div>
                             </li>
                         <% }) %>
