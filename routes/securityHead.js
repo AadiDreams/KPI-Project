@@ -76,11 +76,26 @@
         }
     });
 
-    router.get('/reports', authenticateSecurityHead, (req, res) => {
+    router.get('/reports', authenticateSecurityHead, async (req, res) => {
         const { name } = req.session.user;
-
-        res.render('sh-reports', { name });
+    
+        try {
+            const reportsNew = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'new'");
+            const reportsPending = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'pending'");
+            const reportsSolved = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'solved'");
+    
+            res.render('sh-reports', {
+                name,
+                reportsNew: Array.isArray(reportsNew) ? reportsNew : Object.values(reportsNew),
+                reportsPending: Array.isArray(reportsPending) ? reportsPending : Object.values(reportsPending),
+                reportsSolved: Array.isArray(reportsSolved) ? reportsSolved : Object.values(reportsSolved),
+            });
+        } catch (err) {
+            console.error("Error fetching reports:", err.message);
+            res.status(500).send("Server Error");
+        }
     });
+    
 
     router.get('/visualize', authenticateSecurityHead, (req, res) => {
         const { name } = req.session.user;

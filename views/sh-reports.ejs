@@ -98,44 +98,48 @@
                 <!-- Reports Sections -->
                 <div class="reports-section" id="new-reports">
                     <ul class="reports-list">
-                        <li class="report-item">
-                            <span>Incident: Fire in Terminal 2</span>
-                            <div class="report-buttons">
-                                <button class="btn">View</button>
-                                <button class="btn">Take Action</button>
-                            </div>
-                        </li>
-                        <li class="report-item">
-                            <span>Incident: Unauthorized Entry</span>
-                            <div class="report-buttons">
-                                <button class="btn">View</button>
-                                <button class="btn">Take Action</button>
-                            </div>
-                        </li>
+                        <% reportsNew.forEach(report => { %>
+                            <li class="report-item">
+                                <span>UID: <%= report.uid %> | Incident: <%= report.type_of_incident %> | Date: <%= report.created_at %></span>
+                                <div class="report-buttons">
+                                    <button class="btn">Print</button>
+                                    <button class="btn">Take Action</button>
+                                </div>
+                            </li>
+                        <% }) %>
                     </ul>
                 </div>
+
 
                 <div class="reports-section" id="pending-reports" style="display: none;">
                     <ul class="reports-list">
-                        <li class="report-item">
-                            <span>Incident: Baggage Theft</span>
-                            <div class="report-buttons">
-                                <button class="btn">View</button>
-                            </div>
-                        </li>
+                        <% reportsPending.forEach(report => { %>
+                            <li class="report-item">
+                                <span>UID: <%= report.uid %> | Incident: <%= report.type_of_incident %> | Date: <%= report.created_at %></span>
+                                <div class="report-buttons">
+                                    <button class="btn">Print</button>
+                                    <button class="btn">Take Action</button>
+                                </div>
+                            </li>
+                        <% }) %>
+                    </ul>
+                </div>
+                
+                <div class="reports-section" id="solved-reports" style="display: none;">
+                    <ul class="reports-list">
+                        <% reportsSolved.forEach(report => { %>
+                            <li class="report-item">
+                                <span>UID: <%= report.uid %> | Incident: <%= report.type_of_incident %> | Date: <%= report.created_at %></span>
+                                <div class="report-buttons">
+                                    <button class="btn">Print</button>
+                                    <button class="btn">Take Action</button>
+                                </div>
+                            </li>
+                        <% }) %>
                     </ul>
                 </div>
 
-                <div class="reports-section" id="solved-reports" style="display: none;">
-                    <ul class="reports-list">
-                        <li class="report-item">
-                            <span>Incident: Lost Passport</span>
-                            <div class="report-buttons">
-                                <button class="btn">View</button>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
+                
             </div>
         </main>
     </div>
@@ -155,6 +159,7 @@
                 sections.forEach(section => (section.style.display = "none"));
                 // Show the corresponding section
                 sections[index].style.display = "block";
+                
             });
         });
     </script>

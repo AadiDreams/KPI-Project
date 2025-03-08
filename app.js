@@ -345,6 +345,29 @@ app.post('/submit-incident', upload.single('image-upload'), async (req, res) => 
     }
 });
 
+// Example Express route
+// app.get('/sh-reports', async (req, res) => {
+//     try {
+//         const reportsNew = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'new'");
+//         const reportsPending = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'pending'");
+//         const reportsSolved = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'solved'");
+
+//         res.render('sh-reports', {
+//             name: req.user.name,
+//             reportsNew: reportsNew.rows,
+//             reportsPending: reportsPending.rows,
+//             reportsSolved: reportsSolved.rows
+//         });
+//     } catch (err) {
+//         console.error(err.message);
+//         res.status(500).send("Server Error");
+//     }
+// });
+
+
+
+
+
 
 
 
