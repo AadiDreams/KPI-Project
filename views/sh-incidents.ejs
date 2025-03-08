@@ -132,7 +132,7 @@
                 </div>
 
                 <!-- Table for Incident Types -->
-                <table class="incident-table">
+                <table class="incident-table" border="1">
                     <thead>
                         <tr>
                             <th>Incident Name</th>
@@ -141,17 +141,22 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Unauthorized Entry</td>
-                            <td>5</td>
-                            <td>Threshold reached after 5 occurrences</td>
-                        </tr>
-                        <tr>
-                            <td>Fire Alarm</td>
-                            <td>3</td>
-                            <td>Triggered after 3 detections</td>
-                        </tr>
+                        <% if (Array.isArray(incidents) && incidents.length > 0) { %>
+                            <% incidents.forEach(incident => { %>
+                                <tr>
+                                    <td><%= incident.incidentName %></td>
+                                    <td><%= incident.thresholdValue %></td>
+                                    <td><%= incident.details %></td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="3" style="text-align: center;">No incidents found.</td>
+                            </tr>
+                        <% } %>
+                        
                     </tbody>
+                    
                 </table>
 
                 <!-- Add New Incident Popup -->
@@ -198,7 +203,7 @@
             const incidentDetails = document.getElementById("incident-details").value;
         
             try {
-                const response = await fetch('http://localhost:3000/add-incident', {
+                const response = await fetch('/add-incident', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -223,36 +228,36 @@
             }
         });
 
-        // Load incidents into the table
-        async function fetchIncidents() {
-            try {
-                const response = await fetch('http://localhost:3000/incidents');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
+        // // Load incidents into the table
+        // async function fetchIncidents() {
+        //     try {
+        //         const response = await fetch('http://localhost:3000/incidents');
+        //         if (!response.ok) {
+        //             throw new Error(`HTTP error! Status: ${response.status}`);
+        //         }
 
-                const incidents = await response.json();
-                console.log("🔹 Fetched Incidents:", incidents);
+        //         const incidents = await response.json();
+        //         console.log("🔹 Fetched Incidents:", incidents);
 
-                const tbody = document.querySelector(".incident-table tbody");
-                tbody.innerHTML = ""; // Clear existing rows
+        //         const tbody = document.querySelector(".incident-table tbody");
+        //         tbody.innerHTML = ""; // Clear existing rows
 
-                incidents.forEach((incident) => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${incident.incident_name}</td>
-                        <td>${incident.threshold_value}</td>
-                        <td>${incident.incident_details}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (error) {
-                console.error("Error:", error);
-            }
-        }
+        //         incidents.forEach((incident) => {
+        //             const row = document.createElement("tr");
+        //             row.innerHTML = `
+        //                 <td>${incident.incident_name}</td>
+        //                 <td>${incident.threshold_value}</td>
+        //                 <td>${incident.incident_details}</td>
+        //             `;
+        //             tbody.appendChild(row);
+        //         });
+        //     } catch (error) {
+        //         console.error("Error:", error);
+        //     }
+        // }
 
-        // Fetch incidents when the page loads
-        fetchIncidents();
+        // // Fetch incidents when the page loads
+        // fetchIncidents();
     });
     </script>
 </body>

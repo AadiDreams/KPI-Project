@@ -9,6 +9,18 @@ require('dotenv').config();
 
 const app = express();
 
+const mariadb = require('mariadb');
+
+const pool = mariadb.createPool({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT || 3307,
+    connectionLimit: 10 // Optional: Limits concurrent connections
+});
+module.exports = pool;
+
 // ✅ Database connection details
 const dbOptions = {
     host: process.env.DB_HOST,
@@ -126,6 +138,37 @@ app.get('/', (req, res) => {
     res.render('login'); // Show login page if not authenticated
 });
 
+// Route: Add a new incident
+app.post("/add-incident", async (req, res) => {
+    let connection;
+    
+    try {
+        console.log("✅ Received request body:", req.body);
+
+        const { incident_name, threshold_value, incident_details } = req.body;
+
+        if (!incident_name || !threshold_value || !incident_details) {
+            console.log("❌ Missing fields:", req.body);
+            return res.status(400).json({ message: "All fields are required." });
+        }
+
+        // Get connection from pool
+        connection = await pool.getConnection();
+        
+        // Insert into Database
+        const sql = "INSERT INTO add_incidents (incidentName, thresholdValue, details) VALUES (?, ?, ?)";
+        const result = await connection.query(sql, [incident_name, threshold_value, incident_details]);
+        
+        console.log("✅ Incident added successfully:", result);
+        res.status(201).json({ message: "✅ Incident added successfully." });
+    } catch (error) {
+        console.error("❌ Server Error:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    } finally {
+        // Always release the connection
+        if (connection) connection.release();
+    }
+});
 
 
 

@@ -31,20 +31,30 @@ router.get('/home', (req, res) => {
     });
 });
 
-router.get('/incidents', authenticateSecurityHead, (req, res) => {
-    const { name } = req.session.user;
+router.get('/incidents', authenticateSecurityHead, async (req, res) => {
+    try {
+        console.log("Fetching incidents from the database...");
 
-    res.render('sh-incidents', {
-        name,
-        newIncidents: 5,  // Example dynamic data
-        pendingActions: 3,
-        thresholdAlerts: 2,
-        recentUpdates: [
-            { id: 1, description: 'Incident 1 details', created_at: new Date() },
-            { id: 2, description: 'Incident 2 details', created_at: new Date() },
-        ],
-    });
+        // Query the database for incidents
+        const [incident] = await pool.query("SELECT * FROM add_incidents");
+
+        console.log("Incidents fetched: ", incident); // Log the data for debugging
+
+        // Ensure incidents is always an array
+        const incidents = Array.isArray(incident) ? incident : [incident];
+
+        // Render the template with the incidents data
+        const { name } = req.session.user;
+        res.render("sh-incidents", { 
+            name, 
+            incidents
+        });
+    } catch (error) {
+        console.error("Error fetching incidents:", error);
+        res.status(500).send("Server Error");
+    }
 });
+
 
 
 // Security Head Account Page
@@ -84,12 +94,6 @@ router.get('/notifications', authenticateSecurityHead, (req, res) => {
     const { name } = req.session.user;
 
     res.render('sh-notifications', { name });
-});
-
-router.get('/investigation', authenticateSecurityHead, (req, res) => {
-    const { name } = req.session.user;
-
-    res.render('sh-investigation', { name });
 });
 
 // Upload Profile Picture
@@ -190,4 +194,6 @@ router.post('/account/update-password', authenticateSecurityHead, async (req, re
         return res.status(500).send('Internal Server Error');
     }
 });
+
+
 module.exports = router;
