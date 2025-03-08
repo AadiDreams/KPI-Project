@@ -197,7 +197,26 @@ app.post("/delete-incident/:id", async (req, res) => {
 });
 
 
+// load dropdown list dynamiclly for type of incidents
 
+app.get("/type_incidents", async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const results = await connection.query("SELECT incidentName FROM add_incidents");
+        
+        console.log("✅ Incidents Fetched:", results);
+        
+        // Extract only incident names from the results
+        const incidentNames = results.map(row => row.incidentName);
+        res.json(incidentNames);
+    } catch (err) {
+        console.error("❌ Database Fetch Error:", err);
+        res.status(500).json({ message: "Database error", error: err.message });
+    } finally {
+        if (connection) connection.release();
+    }
+});
 
 // ✅ Start server
 const PORT = process.env.PORT || 3000;
