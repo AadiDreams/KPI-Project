@@ -141,7 +141,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <% if (Array.isArray(incidents) && incidents.length > 0) { %>
+                        <% if (incidents && incidents.length > 0) { %>
                             <% incidents.forEach(incident => { %>
                                 <tr>
                                     <td><%= incident.incidentName %></td>
@@ -154,10 +154,9 @@
                                 <td colspan="3" style="text-align: center;">No incidents found.</td>
                             </tr>
                         <% } %>
-                        
                     </tbody>
-                    
                 </table>
+                
 
                 <!-- Add New Incident Popup -->
                 <div class="form-overlay" id="form-overlay"></div>
@@ -220,7 +219,7 @@
                     document.getElementById("add-incident-form").reset();
                     formPopup.style.display = "none";
                     formOverlay.style.display = "none";
-                    // fetchIncidents();
+                    fetchIncidents();
                 }
             } catch (error) {
                 console.error("❌ Error submitting form:", error);
@@ -228,36 +227,36 @@
             }
         });
 
-        // // Load incidents into the table
-        // async function fetchIncidents() {
-        //     try {
-        //         const response = await fetch('http://localhost:3000/incidents');
-        //         if (!response.ok) {
-        //             throw new Error(`HTTP error! Status: ${response.status}`);
-        //         }
+        // Load incidents into the table
+        async function fetchIncidents() {
+            try {
+                const response = await fetch('http://localhost:3000/incidents');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
 
-        //         const incidents = await response.json();
-        //         console.log("🔹 Fetched Incidents:", incidents);
+                const incidents = await response.json();
+                console.log("🔹 Fetched Incidents:", incidents);
 
-        //         const tbody = document.querySelector(".incident-table tbody");
-        //         tbody.innerHTML = ""; // Clear existing rows
+                const tbody = document.querySelector(".incident-table tbody");
+                tbody.innerHTML = ""; // Clear existing rows
 
-        //         incidents.forEach((incident) => {
-        //             const row = document.createElement("tr");
-        //             row.innerHTML = `
-        //                 <td>${incident.incident_name}</td>
-        //                 <td>${incident.threshold_value}</td>
-        //                 <td>${incident.incident_details}</td>
-        //             `;
-        //             tbody.appendChild(row);
-        //         });
-        //     } catch (error) {
-        //         console.error("Error:", error);
-        //     }
-        // }
+                incidents.forEach((incident) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${incident.incident_name}</td>
+                        <td>${incident.threshold_value}</td>
+                        <td>${incident.incident_details}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
 
-        // // Fetch incidents when the page loads
-        // fetchIncidents();
+        // Fetch incidents when the page loads
+        fetchIncidents();
     });
     </script>
 </body>

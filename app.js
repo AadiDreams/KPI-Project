@@ -8,7 +8,7 @@ const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
-
+const mysql = require('mysql2/promise');
 const mariadb = require('mariadb');
 
 const pool = mariadb.createPool({
@@ -177,3 +177,15 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
+
+
+
+if (process.env.NODE_ENV === 'development') {
+    app.use((req, res, next) => {
+        if (!req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg)$/)) {
+            console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+            console.log("Session Data:", req.session);
+        }
+        next();
+    });
+}
