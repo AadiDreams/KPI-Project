@@ -170,6 +170,33 @@ app.post("/add-incident", async (req, res) => {
     }
 });
 
+//incident deletion
+
+app.post("/delete-incident/:id", async (req, res) => {
+    let connection;
+    try {
+        const incidentId = req.params.id;
+
+        // Get connection from pool
+        connection = await pool.getConnection();
+
+        // Delete the incident from the database
+        const sql = "DELETE FROM add_incidents WHERE incidentName = ?";
+        await connection.query(sql, [incidentId]);
+
+        console.log(`✅ Incident with ID ${incidentId} deleted successfully.`);
+        
+        // Refresh the page after deletion
+        res.redirect("/security-head/incidents");
+    } catch (error) {
+        console.error("❌ Server Error:", error);
+        res.status(500).send("Server error. Could not delete the incident.");
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+
 
 
 // ✅ Start server

@@ -52,7 +52,7 @@
             res.status(500).send("Server Error");
         }
     });
-    
+
 
 
     // Security Head Account Page

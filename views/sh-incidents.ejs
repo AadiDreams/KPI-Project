@@ -138,6 +138,7 @@
                             <th>Incident Name</th>
                             <th>Threshold Value</th>
                             <th>Details</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -147,6 +148,11 @@
                                     <td><%= incident.incidentName %></td>
                                     <td><%= incident.thresholdValue %></td>
                                     <td><%= incident.details %></td>
+                                    <td>
+                                        <form action="/delete-incident/<%= incident.incidentName %>" method="POST" onsubmit="return confirm('Are you sure you want to delete this incident?');">
+                                            <button type="submit">Delete</button>
+                                        </form>
+                                    </td>
                                 </tr>
                             <% }); %>
                         <% } else { %>
