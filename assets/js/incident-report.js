@@ -76,3 +76,43 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Add Witness button not found");
     }
 });
+
+
+//load incident types
+function loadIncidentTypes() {
+    $.ajax({
+        url: "http://localhost:3000/type_incidents",
+        type: "GET",
+        dataType: "json",
+        success: function(data) {
+            let dropdown = $("#type-of-incident");
+            dropdown.empty(); // Clear existing options
+            dropdown.append('<option value="">Select an Incident</option>');
+
+            $.each(data, function(index, name) {
+                dropdown.append(`<option value="${name}">${name}</option>`);
+            });
+        },
+        error: function() {
+            alert("Failed to load incident types.");
+        }
+    });
+}
+
+$(document).ready(function() {
+    loadIncidentTypes();
+
+    // Ensure the form properly detects the selected value before submission
+    $("form").on("submit", function(e) {
+        let selectedValue = $("#type-of-incident").val();
+        console.log("Selected Incident:", selectedValue); // Debugging
+
+        if (!selectedValue) {
+            alert("Please select an incident from the list.");
+            e.preventDefault(); // Stop form submission
+        }
+    });
+});
+
+// Refresh dropdown every 5 seconds to get newly added incidents
+// setInterval(loadIncidentTypes, 5000);
