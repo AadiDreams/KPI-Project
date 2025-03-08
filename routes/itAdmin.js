@@ -197,13 +197,60 @@ router.get('/department', isITAdmin, async (req, res) => {
             profileIcon = result[0].profile_picture;
         }
 
-        const [departmentsData] = await pool.query('SELECT * FROM departments');
-        const departments = departmentsData || [];
+        // const [departmentsData] = await pool.query('SELECT * FROM departments');
+        // const departments = departmentsData || [];
 
-        res.render('it-department', { adminName: name, profileIcon, departments, active: 'department' });
+        // Use async/await for better error handling
+        // const connection = await pool.getConnection();
+        const departments = await pool.query("SELECT departmentID, departmentName FROM departments");
+        // connection.release();
+        
+        console.log("✅ Departments Fetched:", departments);
+        
+        // Make sure we're returning an array
+        //res.json(Array.isArray(departments) ? departments : []);
+
+        res.render('it-department', { adminName: name, profileIcon, departments:departments.length>0?departments:[], active: 'department' });
     } catch (err) {
         console.error('Error fetching data:', err);
         res.status(500).send('Internal Server Error');
+    }
+});
+
+router.post("/department/add-department", async (req, res) => {
+    let connection;
+    
+    try {
+        console.log("✅ Received request body:", req.body);
+
+        const department_id = req.body["department-id"];
+        const department_name = req.body["department-name"];
+        const password = req.body.password;
+
+        if (!department_id || !department_name || !password) {
+            console.log("❌ Missing fields:", req.body);
+            return res.status(400).json({ message: "All fields are required." });
+        }
+
+        // Hash Password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Get connection from pool
+        connection = await pool.getConnection();
+        
+        // Insert into Database
+        const sql = "INSERT INTO departments (departmentID, departmentName , password) VALUES (?, ?, ?)";
+        const result = await connection.query(sql, [department_id, department_name, hashedPassword]);
+        
+        console.log("✅ Department added successfully:", result);
+        return res.redirect('/it-admin/department');
+    } catch (error) {
+        console.error("❌ Server Error:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    } finally {
+        // Always release the connection
+        if (connection) connection.release();
     }
 });
 

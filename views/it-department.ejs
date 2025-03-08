@@ -201,8 +201,8 @@
                     <% if (departments.length > 0) { %>
                         <% departments.forEach(function(department) { %>
                             <div class="department-item">
-                                <span><%= department.name %></span>
-                                <span>ID: <%= department.id %></span>
+                                <span><%= department.departmentName %></span>
+                                <span>ID: <%= department.departmentID %></span>
                             </div>
                         <% }); %>
                     <% } else { %>
@@ -222,7 +222,7 @@
                 <h2>Add New Department</h2>
                 <button class="close-btn" id="close-modal-btn">&times;</button>
             </div>
-            <form action="/it-admin/department/add" method="POST">
+            <form action="/it-admin/department/add-department" method="POST">
                 <div class="form-group">
                     <label for="department-name">Department Name</label>
                     <input type="text" id="department-name" name="department-name" placeholder="Enter department name" required>
@@ -241,23 +241,111 @@
     </div>
 
     <script>
-        const openModalBtn = document.getElementById('open-modal-btn');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const addDepartmentModal = document.getElementById('add-department-modal');
+        document.addEventListener('DOMContentLoaded', function () {
+    const openModalBtn = document.getElementById('open-modal-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const addDepartmentModal = document.getElementById('add-department-modal');
+    const addDepartmentForm = document.getElementById('add-department-form');
 
-        openModalBtn.addEventListener('click', () => {
-            addDepartmentModal.classList.add('active');
-        });
+    // Open modal
+    openModalBtn.addEventListener('click', () => {
+        addDepartmentModal.classList.add('active');
+    });
 
-        closeModalBtn.addEventListener('click', () => {
+    // Close modal
+    closeModalBtn.addEventListener('click', () => {
+        addDepartmentModal.classList.remove('active');
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        if (e.target === addDepartmentModal) {
             addDepartmentModal.classList.remove('active');
-        });
+        }
+    });
 
-        window.addEventListener('click', (e) => {
-            if (e.target === addDepartmentModal) {
+    // Handle form submission
+    addDepartmentForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const departmentName = document.getElementById('department-name').value;
+        const departmentId = document.getElementById('department-id').value;
+        const password = document.getElementById('password').value;
+
+        console.log("🔹 Sending data:", { department_id: departmentId, department_name: departmentName, password });
+
+        try {
+            const response = await fetch('http://localhost:3000/add-department', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    department_id: departmentId,
+                    department_name: departmentName,
+                    password: password
+                }),
+            });
+
+            const result = await response.json();
+            
+            // Show success message
+            alert(result.message);
+            
+            if (response.ok) {
+                // Reset form fields
+                addDepartmentForm.reset();
+                
+                // Close the modal
                 addDepartmentModal.classList.remove('active');
+                
+                // Refresh the department list
+                fetchDepartments();
             }
-        });
+        } catch (error) {
+            console.error("❌ Error submitting form:", error);
+            alert("Error adding department. Please try again.");
+        }
+    });
+
+    // Function to fetch and display departments
+    async function fetchDepartments() {
+        try {
+            const response = await fetch('/department');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const departments = await response.json();
+            console.log("🔹 Fetched Departments:", departments);
+
+            const departmentsList = document.getElementById('departments-list');
+            departmentsList.innerHTML = ''; // Clear existing content
+
+            // Check if departments is an array and has content
+            if (Array.isArray(departments) && departments.length > 0) {
+                // Loop through fetched departments and add them dynamically
+                departments.forEach(department => {
+                    const departmentItem = document.createElement('div');
+                    departmentItem.classList.add('department-item');
+                    departmentItem.innerHTML = `
+                        <span>${department.department_name}</span>
+                        <span>ID: ${department.department_id}</span>
+                    `;
+                    departmentsList.appendChild(departmentItem);
+                });
+            } else {
+                // If no departments or invalid data, show a message
+                departmentsList.innerHTML = '<p>No departments found.</p>';
+            }
+        } catch (error) {
+            console.error("❌ Error fetching departments:", error);
+            document.getElementById('departments-list').innerHTML = 
+                '<p>Error loading departments. Please refresh the page.</p>';
+        }
+    }
+
+    // Fetch departments when the page loads
+    fetchDepartments();
+});
     </script>
 </body>
 </html>

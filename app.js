@@ -34,22 +34,22 @@ const dbOptions = {
 
 const sessionStore = new MySQLStore(dbOptions);
 
-// ✅ Ensure the upload directory exists
-const uploadDirectory = path.join(__dirname, 'public', 'images');
-if (!fs.existsSync(uploadDirectory)) {
-    fs.mkdirSync(uploadDirectory, { recursive: true });
-}
+// // ✅ Ensure the upload directory exists
+// const uploadDirectory = path.join(__dirname, 'public', 'images');
+// if (!fs.existsSync(uploadDirectory)) {
+//     fs.mkdirSync(uploadDirectory, { recursive: true });
+// }
 
-// ✅ Configure Multer for file uploads
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDirectory);
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
+// // ✅ Configure Multer for file uploads
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, uploadDirectory);
+//     },
+//     filename: function (req, file, cb) {
+//         cb(null, Date.now() + path.extname(file.originalname));
+//     }
+// });
+// const upload = multer({ storage: storage });
 
 // ✅ Middleware
 app.use(express.urlencoded({ extended: true }));
@@ -217,6 +217,140 @@ app.get("/type_incidents", async (req, res) => {
         if (connection) connection.release();
     }
 });
+
+// Ensure uploads directory exists
+const uploadDirectory = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDirectory)) {
+    fs.mkdirSync(uploadDirectory, { recursive: true });
+}
+
+// Multer setup for file uploads
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, uploadDirectory);
+    },
+    filename: function(req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: function(req, file, cb) {
+        const allowedTypes = /jpeg|jpg|png|gif/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        
+        if (extname && mimetype) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed.'));
+        }
+    }
+});
+
+
+
+
+// Endpoint: Submit incident report
+
+
+app.post('/submit-incident', upload.single('image-upload'), async (req, res) => {
+    try {
+        // Initialize JSON data with proper empty arrays if not provided
+        let chronologicalSummary = '[]';
+        let witnesses = '[]';
+        
+        // Get form data for events and witnesses
+        const eventTimes = Array.isArray(req.body['event-time']) ? req.body['event-time'] : [req.body['event-time']];
+        const eventDescriptions = Array.isArray(req.body['event-description']) ? req.body['event-description'] : [req.body['event-description']];
+        
+        const witnessNames = Array.isArray(req.body['witness-name']) ? req.body['witness-name'] : [req.body['witness-name']];
+        const witnessOrgs = Array.isArray(req.body['witness-org']) ? req.body['witness-org'] : [req.body['witness-org']];
+        const witnessContacts = Array.isArray(req.body['witness-contact']) ? req.body['witness-contact'] : [req.body['witness-contact']];
+        
+        // Create JSON structures from form data
+        if (eventTimes && eventDescriptions && eventTimes.length > 0 && eventDescriptions.length > 0) {
+            const events = [];
+            for (let i = 0; i < eventTimes.length; i++) {
+                if (eventTimes[i] && eventDescriptions[i]) {
+                    events.push({
+                        time: eventTimes[i],
+                        description: eventDescriptions[i]
+                    });
+                }
+            }
+            chronologicalSummary = JSON.stringify(events);
+        }
+        
+        if (witnessNames && witnessOrgs && witnessContacts && 
+            witnessNames.length > 0 && witnessOrgs.length > 0 && witnessContacts.length > 0) {
+            const witnesses_arr = [];
+            for (let i = 0; i < witnessNames.length; i++) {
+                if (witnessNames[i] && witnessOrgs[i] && witnessContacts[i]) {
+                    witnesses_arr.push({
+                        name: witnessNames[i],
+                        organization: witnessOrgs[i],
+                        contact: witnessContacts[i]
+                    });
+                }
+            }
+            witnesses = JSON.stringify(witnesses_arr);
+        }
+
+        // Get the image path if a file was uploaded
+        const imagePath = req.file ? req.file.filename : null;
+        console.log('Uploaded file:', req.file);
+        console.log('Image path:', imagePath);
+
+        const sql = `
+            INSERT INTO incidents (
+                date, uid, incident_time, location, description, type_of_incident, no_of_injured,
+                injured_person_category, type_of_casualty, incident_details, image_path, alert_received_by,
+                alerted_by, alert_time, medical_support, name_of_doctor, name_of_nurse, ambulance_service,
+                chronological_events, police_notification, police_station, reporting_time, legal_action, 
+                details, damage_details, witnesses, contributing_factors, contributing_factors_details,
+                recommendations, status_of_incident, follow_up_actions, comments, submitted_by, designation
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+            req.body.date, req.body.uid, req.body['incident-time'], req.body.location, req.body.description,
+            req.body['type-of-incident'], req.body['no-of-injured'], req.body['injured-person-category'],
+            req.body['type-of-casualty'], req.body['incident-details'], imagePath, req.body['alert-received-by'],
+            req.body['alerted-by'], req.body['alert-time'], req.body['medical-support'], req.body['name-of-doctor'],
+            req.body['name-of-nurse'], req.body['ambulance-service'], chronologicalSummary, req.body['police-notification'],
+            req.body['to-whom'], req.body['reporting-time'], req.body['legal-action'], req.body['details'],
+            req.body['damage-to'], witnesses, req.body['contributing-factors'], req.body['contributing-factors-details'],
+            req.body['recommendations-for-remedial-actions'], req.body['status-of-incident'], req.body['follow-up-actions'],
+            req.body['any-other-comments'], req.body['submitted-name'], req.body['designation']
+        ];
+
+        let connection;
+        try {
+            connection = await pool.getConnection();
+            const result = await connection.query(sql, values);
+            console.log('Database insertion result:', result);
+            res.status(200).send('Incident report submitted successfully!');
+        } catch (err) {
+            console.error('Database Insertion Error:', err.message);
+            res.status(500).send('Error inserting data into the database.');
+        } finally {
+            if (connection) connection.release();
+        }
+    } catch (error) {
+        console.error('Error processing form submission:', error.message);
+        res.status(400).send('Invalid form data. Please check your inputs.');
+    }
+});
+
+
+
+
+
+
+
 
 // ✅ Start server
 const PORT = process.env.PORT || 3000;
