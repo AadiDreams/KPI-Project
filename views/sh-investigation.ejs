@@ -191,7 +191,7 @@
                 <table border="1" id="details-of-aircraft-involved">
                     <tr>
                         <td>Name of Airline/Operator</td>
-                        <td><input type="text" id="airline" name="aircraft"></td>
+                        <td><input type="text" id="airline" name="airline-operator"></td>
                     </tr>
 
                     <tr>
@@ -216,7 +216,7 @@
 
                     <tr>
                         <td>Phase of Operation</td>
-                        <td><input type="text" id="phase-of-operation-aircraft"></td>
+                        <td><input type="text" id="phase-of-operation-aircraft" name="phase-of-operation-aircraft"></td>
                     </tr>
                 </table>
             </fieldset>
@@ -399,6 +399,12 @@
             <div class="selected-departments" id="selected-departments"></div>
 
             <input type="hidden" id="hidden-input" name="departments">
+
+            <!-- Add these hidden fields inside your form before the submit button -->
+<input type="hidden" id="vehicles_json" name="vehicles_json" value="[]">
+<input type="hidden" id="incidents_json" name="incidents_json" value="[]">
+<input type="hidden" name="airline-operator" id="airline-operator">
+<input type="hidden" name="phase-of-operation-aircraft" id="phase-of-operation-aircraft-hidden">
             <button type="submit" id="submit">Submit</button>
         </form>                 
         </div>
@@ -407,72 +413,274 @@
 
     <script>
         let vehicleCount = 1;
+let vehicles = []; // Array to store vehicle data
+let events = []; // Array to store chronological incidents
 
-        // Function to add a new vehicle column
-        function addVehicleColumn() {
-            vehicleCount++;
-            const table = document.getElementById('details-of-vechicles/equipments');
-            const headerRow = document.getElementById('headerRow');
+// Function to add a new vehicle column
+function addVehicleColumn() {
+    vehicleCount++;
+    const table = document.getElementById('details-of-vechicles/equipments');
+    const headerRow = document.getElementById('headerRow');
 
-            // Add a new header for the vehicle
-            const newHeader = document.createElement('th');
-            newHeader.textContent = `Vehicle ${vehicleCount}`;
-            headerRow.appendChild(newHeader);
+    // Add a new header for the vehicle
+    const newHeader = document.createElement('th');
+    newHeader.textContent = `Vehicle ${vehicleCount}`;
+    headerRow.appendChild(newHeader);
 
-            // Add a new column to each row in the table
-            const rows = table.rows;
-            for (let i = 1; i < rows.length; i++) {
-                const newCell = document.createElement('td');
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.name = `${rows[i].cells[0].textContent.toLowerCase().replace(/ /g, '_')}_${vehicleCount}`;
-                newCell.appendChild(input);
-                rows[i].appendChild(newCell);
-            }
-        }
-
-        // Function to remove the last vehicle column
-        function removeLastVehicleColumn() {
-            if (vehicleCount > 1) {  // Check if there's more than one vehicle column
-                const table = document.getElementById('details-of-vechicles/equipments');
-                const headerRow = document.getElementById('headerRow');
-                const rows = table.rows;
-
-                // Remove the last header cell (last vehicle)
-                headerRow.deleteCell(vehicleCount);
-
-                // Remove the corresponding cells for each row in the table
-                for (let i = 1; i < rows.length; i++) {
-                    rows[i].deleteCell(vehicleCount);
-                }
-
-                // Decrement the vehicle count
-                vehicleCount--;
-            }
-        }
-
-        // Function to add a new row
-        function addEventRow() {
-            const table = document.getElementById('Events-table');
-            const row = table.insertRow(-1);
-            const cell1 = row.insertCell(0);
-            const cell2 = row.insertCell(1); // Cell for the Remove button
-            const cell3 = row.insertCell(2);
-
-            cell1.innerHTML = `<input type="time" name="event-time" placeholder="Time" required>`;
-            cell2.innerHTML = `<textarea name="event-description" id="event-description" placeholder="Enter details..." required>`; 
-            cell3.innerHTML = `<button type="button" class="remove-button" onclick="removeEventRow(this)">Remove</button>`; 
-        }
-
-        // Function to remove an event row
-        function removeEventRow(button) {
-            const row = button.closest('tr');
-            row.remove();
-        }
-        function toggleDropdown() {
-        const dropdownList = document.getElementById('dropdown-list');
-        dropdownList.style.display = dropdownList.style.display === 'block' ? 'none' : 'block';
+    // Add a new column to each row in the table
+    const rows = table.rows;
+    for (let i = 1; i < rows.length; i++) {
+        const newCell = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.name = `${rows[i].cells[0].textContent.toLowerCase().replace(/ /g, '-')}_${vehicleCount}`;
+        input.dataset.field = rows[i].cells[0].textContent.toLowerCase().replace(/ /g, '-');
+        input.dataset.vehicle = vehicleCount;
+        newCell.appendChild(input);
+        rows[i].appendChild(newCell);
     }
+    
+    // Initialize the new vehicle in our array
+    vehicles.push({
+        vehicleNumber: vehicleCount,
+        typeOfVehicle: '',
+        airsideVehiclePermit: '',
+        equipmentNo: '',
+        ownerOperator: '',
+        phaseOfOperation: ''
+    });
+    
+    updateVehiclesJson();
+}
+
+// Function to remove the last vehicle column
+function removeLastVehicleColumn() {
+    if (vehicleCount > 1) {  // Check if there's more than one vehicle column
+        const table = document.getElementById('details-of-vechicles/equipments');
+        const headerRow = document.getElementById('headerRow');
+        const rows = table.rows;
+
+        // Remove the last header cell (last vehicle)
+        headerRow.deleteCell(vehicleCount);
+
+        // Remove the corresponding cells for each row in the table
+        for (let i = 1; i < rows.length; i++) {
+            rows[i].deleteCell(vehicleCount);
+        }
+
+        // Remove from our tracking array
+        vehicles.pop();
+        
+        // Decrement the vehicle count
+        vehicleCount--;
+        
+        updateVehiclesJson();
+    }
+}
+
+// Function to add a new event row
+function addEventRow() {
+    const table = document.getElementById('Events-table');
+    const row = table.insertRow(-1);
+    const cell1 = row.insertCell(0);
+    const cell2 = row.insertCell(1);
+    const cell3 = row.insertCell(2);
+
+    const timeInput = document.createElement('input');
+    timeInput.type = 'time';
+    timeInput.name = 'event-time';
+    timeInput.placeholder = 'Time';
+    timeInput.required = true;
+    timeInput.onchange = updateEventsJson;
+    cell1.appendChild(timeInput);
+
+    const descInput = document.createElement('textarea');
+    descInput.name = 'event-description';
+    descInput.id = 'event-description';
+    descInput.placeholder = 'Enter details...';
+    descInput.required = true;
+    descInput.onchange = updateEventsJson;
+    cell2.appendChild(descInput);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'remove-button';
+    removeBtn.textContent = 'Remove';
+    removeBtn.onclick = function() { removeEventRow(this); };
+    cell3.appendChild(removeBtn);
+    
+    // Add a new empty event to our array
+    events.push({
+        time: '',
+        description: ''
+    });
+    
+    updateEventsJson();
+}
+
+// Function to remove an event row
+function removeEventRow(button) {
+    const row = button.closest('tr');
+    const rowIndex = row.rowIndex - 1; // Adjust for header row
+    
+    // Remove from our tracking array
+    events.splice(rowIndex - 1, 1); // Adjust for header row
+    
+    row.remove();
+    updateEventsJson();
+}
+
+// Function to update the vehicles JSON hidden field
+function updateVehiclesJson() {
+    // Clear existing vehicles data
+    vehicles = [];
+    
+    // Get all vehicle-related inputs
+    const table = document.getElementById('details-of-vechicles/equipments');
+    const rows = table.rows;
+    
+    // Start from 1 because first row is empty and we're 1-indexed for vehicles
+    for (let v = 1; v <= vehicleCount; v++) {
+        const vehicleData = {
+            vehicleNumber: v,
+            typeOfVehicle: '',
+            airsideVehiclePermit: '',
+            equipmentNo: '',
+            ownerOperator: '',
+            phaseOfOperation: ''
+        };
+        
+        // For each row (starting from row 1, which is the first data row)
+        for (let i = 1; i < rows.length; i++) {
+            const fieldName = rows[i].cells[0].textContent.toLowerCase().replace(/ /g, '-');
+            const input = rows[i].cells[v].querySelector('input');
+            if (input) {
+                switch(fieldName) {
+                    case 'type-of-vehicle/equipment':
+                        vehicleData.typeOfVehicle = input.value;
+                        break;
+                    case 'airside-vehicle-permit-(avp)':
+                        vehicleData.airsideVehiclePermit = input.value;
+                        break;
+                    case 'equipment-no.':
+                        vehicleData.equipmentNo = input.value;
+                        break;
+                    case 'owner/operator/ghsp':
+                        vehicleData.ownerOperator = input.value;
+                        break;
+                    case 'phase-of-operation':
+                        vehicleData.phaseOfOperation = input.value;
+                        break;
+                }
+            }
+        }
+        
+        vehicles[v-1] = vehicleData;
+    }
+    
+    // Update the hidden field with the JSON string
+    document.getElementById('vehicles_json').value = JSON.stringify(vehicles);
+}
+
+// Function to update the events JSON hidden field
+function updateEventsJson() {
+    // Clear existing events data
+    events = [];
+    
+    // Get all event rows
+    const table = document.getElementById('Events-table');
+    const rows = table.rows;
+    
+    // Start from 1 to skip the header row
+    for (let i = 1; i < rows.length; i++) {
+        const timeInput = rows[i].cells[0].querySelector('input[type="time"]');
+        const descInput = rows[i].cells[1].querySelector('textarea');
+        
+        if (timeInput && descInput) {
+            events.push({
+                time: timeInput.value,
+                description: descInput.value
+            });
+        }
+    }
+    
+    // Update the hidden field with the JSON string
+    document.getElementById('incidents_json').value = JSON.stringify(events);
+}
+
+// Attach event listeners to all form fields to update the JSON data
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hidden fields to the form for storing JSON data
+    const form = document.querySelector('form[action="/submit-investigation"]');
+    
+    // Add hidden fields if they don't exist
+    if (!document.getElementById('vehicles_json')) {
+        const vehiclesInput = document.createElement('input');
+        vehiclesInput.type = 'hidden';
+        vehiclesInput.id = 'vehicles_json';
+        vehiclesInput.name = 'vehicles_json';
+        vehiclesInput.value = '[]';
+        form.appendChild(vehiclesInput);
+    }
+    
+    if (!document.getElementById('incidents_json')) {
+        const incidentsInput = document.createElement('input');
+        incidentsInput.type = 'hidden';
+        incidentsInput.id = 'incidents_json';
+        incidentsInput.name = 'incidents_json';
+        incidentsInput.value = '[]';
+        form.appendChild(incidentsInput);
+    }
+    
+    // Add event listeners to existing vehicle inputs
+    const vehicleInputs = document.querySelectorAll('#details-of-vechicles\\/equipments input');
+    vehicleInputs.forEach(input => {
+        input.addEventListener('change', updateVehiclesJson);
+    });
+    
+    // Add event listeners to existing event inputs
+    const eventTimeInputs = document.querySelectorAll('#Events-table input[type="time"]');
+    const eventDescInputs = document.querySelectorAll('#Events-table textarea');
+    
+    eventTimeInputs.forEach(input => {
+        input.addEventListener('change', updateEventsJson);
+    });
+    
+    eventDescInputs.forEach(input => {
+        input.addEventListener('change', updateEventsJson);
+    });
+    
+    // Initialize the JSON data
+    updateVehiclesJson();
+    updateEventsJson();
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        // Update JSON data one final time before submission
+        updateVehiclesJson();
+        updateEventsJson();
+        
+        // Add airline value if it's missing
+        const airlineInput = document.getElementById('airline');
+        if (airlineInput && !document.querySelector('input[name="airline-operator"]')) {
+            const airlineOperatorInput = document.createElement('input');
+            airlineOperatorInput.type = 'hidden';
+            airlineOperatorInput.name = 'airline-operator';
+            airlineOperatorInput.value = airlineInput.value;
+            form.appendChild(airlineOperatorInput);
+        }
+        
+        // Add phase of operation if it's missing
+        const phaseInput = document.getElementById('phase-of-operation-aircraft');
+        if (phaseInput && !document.querySelector('input[name="phase-of-operation-aircraft"]')) {
+            const phaseOperatorInput = document.createElement('input');
+            phaseOperatorInput.type = 'hidden';
+            phaseOperatorInput.name = 'phase-of-operation-aircraft';
+            phaseOperatorInput.value = phaseInput.value;
+            form.appendChild(phaseOperatorInput);
+        }
+    });
+});
 
     function selectDepartment(element, department) {
         const selectedContainer = document.getElementById('selected-departments');
@@ -531,6 +739,31 @@
             document.getElementById('dropdown-list').style.display = 'none';
         }
     });
+
+    // Additional script to handle form field synchronization
+document.addEventListener('DOMContentLoaded', function() {
+    // Sync airline field values
+    const airlineField = document.getElementById('airline');
+    if (airlineField) {
+        airlineField.addEventListener('input', function() {
+            const airlineOperator = document.getElementById('airline-operator');
+            if (airlineOperator) {
+                airlineOperator.value = this.value;
+            }
+        });
+    }
+    
+    // Sync phase of operation field values
+    const phaseField = document.getElementById('phase-of-operation-aircraft');
+    if (phaseField) {
+        phaseField.addEventListener('input', function() {
+            const phaseHidden = document.getElementById('phase-of-operation-aircraft-hidden');
+            if (phaseHidden) {
+                phaseHidden.value = this.value;
+            }
+        });
+    }
+});
     </script>
 </body>
 </html>
