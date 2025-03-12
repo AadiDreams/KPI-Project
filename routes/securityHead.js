@@ -13,24 +13,39 @@
     };
     const mysql = require('mysql2/promise');
     // Security Head Home Page
-    router.get('/home', (req, res) => {
+    router.get('/home', async (req, res) => {
         if (!req.session.user || req.session.user.role !== 1) {
             console.log("Access denied: User not logged in or incorrect role");
             return res.status(403).send('Access denied.');
         }
-
+    
         const { name } = req.session.user;
-        res.render('sh-home', {
-            name,
-            newIncidents: 5, // Example dynamic data
-            pendingActions: 3,
-            thresholdAlerts: 2,
-            recentUpdates: [
+    
+        try {
+            // Query the database for updated counts
+            const [newIncidents] = await pool.query('SELECT COUNT(*) AS count FROM incidents WHERE report_status = "new"');
+            const [pendingActions] = await pool.query('SELECT COUNT(*) AS count FROM incidents WHERE report_status = "pending"');
+    
+            const thresholdAlerts = 2; // Replace with real logic if applicable
+            const recentUpdates = [
                 { id: 1, description: 'Incident 1 details', created_at: new Date() },
                 { id: 2, description: 'Incident 2 details', created_at: new Date() },
-            ],
-        });
+            ];
+    
+            // Render the page with updated data
+            res.render('sh-home', {
+                name,
+                newIncidents: newIncidents.count,
+                pendingActions: pendingActions.count,
+                thresholdAlerts,
+                recentUpdates,
+            });
+        } catch (error) {
+            console.error('Error fetching incident data:', error);
+            res.status(500).send('Internal server error.');
+        }
     });
+    
 
     router.get('/incidents', authenticateSecurityHead, async (req, res) => {
         try {
