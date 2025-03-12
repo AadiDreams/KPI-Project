@@ -345,6 +345,48 @@ app.post('/submit-incident', upload.single('image-upload'), async (req, res) => 
     }
 });
 
+// load dropdown list dynamiclly for uid numbers
+
+app.get("/uid_numbers", async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const results = await connection.query("SELECT uid FROM incidents");
+        
+        console.log("✅ UID Numbers Fetched:", results);
+        
+        // Extract only uod number  from the results
+        const uid = results.map(row => row.uid);
+        res.json(uid);
+    } catch (err) {
+        console.error("❌ Database Fetch Error:", err);
+        res.status(500).json({ message: "Database error", error: err.message });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// load dropdown list dynamiclly for departments
+
+app.get("/department_names", async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const results = await connection.query("SELECT departmentID FROM departments");
+        
+        console.log("✅ Departments Fetched:", results);
+        
+        // Extract only uod number from the results
+        const departmentID = results.map(row => row.departmentID);
+        res.json(departmentID);
+    } catch (err) {
+        console.error("❌ Database Fetch Error:", err);
+        res.status(500).json({ message: "Database error", error: err.message });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
 //Endpoint: Submit safety investigation report
 
 app.post('/submit-investigation', async (req, res) => {
@@ -448,11 +490,11 @@ app.post('/submit-investigation', async (req, res) => {
         }
 
         // Count the number of columns in your SQL statement
-        const columnCount = 38;
+        const columnCount = 40;
 
         const sql = `
             INSERT INTO investigation (
-                date_time, name_of_airport, location_of_incident, type_of_operation,
+                date_time, name_of_airport, location_of_incident, type_of_operation,uid,
                 airline_operator, aircraft_type, registration_no, flight_no, sector,
                 phase_of_operation, vehicles, chronological_incidents, brief_description,
                 action_taken, injuries_fatal_driver, injuries_fatal_ground_staff, injuries_fatal_other,
@@ -461,7 +503,7 @@ app.post('/submit-investigation', async (req, res) => {
                 damage_to, other_damage, personnel_information, equipment_information,
                 metrological_information, aerodrome_information, fire,
                 organization_and_management_information, analysis, findings, probable_cause,
-                contributory_factor, safety_manager, report_date, appendices
+                contributory_factor, safety_manager, report_date, appendices,department
             ) VALUES (${Array(columnCount).fill('?').join(', ')})
         `;
         
@@ -480,7 +522,8 @@ app.post('/submit-investigation', async (req, res) => {
             processField(req.body["date-time"]), 
             processField(req.body["name-of-airport"]), 
             processField(req.body["location-of-incident"]),
-            processField(req.body["type-of-operation"]), 
+            processField(req.body["type-of-operation"]),
+            processField(req.body["uid-number"]), 
             airline, // This is now properly processed and should not be null
             processField(req.body["aircraft-type"]), 
             processField(req.body["registration-no"]),
@@ -514,7 +557,8 @@ app.post('/submit-investigation', async (req, res) => {
             processField(req.body["contributory-factor"]),
             processField(req.body["safety-manager"]), 
             processField(req.body["date"]), 
-            processField(req.body["appendices"])
+            processField(req.body["appendices"]),
+            processField(req.body["dpt-name"])
         ];
         
         // Verify the number of values matches the number of columns
