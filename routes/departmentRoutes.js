@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const db = require('../db'); // Ensure correct DB connection
+const pool = require('../db'); 
 const router = express.Router();
 const isAuthenticated = (req, res, next) => {
     if (!req.session.user || req.session.user.type !== 'department') {  
@@ -221,16 +222,17 @@ router.get('/:departmentID/notifications', isAuthenticated, async (req, res) => 
         }
         
 
-        // Fetch notifications for the department
-        // const [rows] = await db.execute(
-        //     'SELECT message, DATE_FORMAT(timestamp, "%Y-%m-%d %H:%i") AS time FROM notifications WHERE departmentID = ? ORDER BY timestamp DESC',
-        //     [departmentID]
-        // );
+        const reportsNew = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.created_at FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'pending' AND investigation.department = ?;",
+            [departmentID]);
+        const reportsSolved = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.created_at FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'solved' AND investigation.department = ?;",
+            [departmentID]);
+    
 
         res.render('dpt-notifications', { 
             departmentName: req.session.user.departmentName, 
             departmentID: departmentID,
-            //notifications: rows || [], // Pass notifications to EJS
+            reportsNew: Array.isArray(reportsNew) ? reportsNew : Object.values(reportsNew),
+            reportsSolved: Array.isArray(reportsSolved) ? reportsSolved : Object.values(reportsSolved),
             active: 'notifications'
         });
 
@@ -246,5 +248,36 @@ router.post('/logout', (req, res) => {
         res.redirect('/login'); // Redirect to login page after logout
     });
 });
+
+
+// router.post('/:departmentID/notifications/update-status', isAuthenticated, async (req, res) => {
+//     const { uid } = req.body;
+//     const { departmentID } = req.params;
+
+//     // Validate input
+//     if (!uid || !departmentID) {
+//         return res.status(400).json({ success: false, message: 'Invalid UID or Department ID.' });
+//     }
+
+//     try {
+//         // Update the report status in the database
+//         const result = await pool.query(
+//             "UPDATE investigation SET report_status = 'solved' WHERE uid = ? AND department = ?",
+//             [uid, departmentID]
+//         );
+
+//         if (result.affectedRows > 0) {
+//             res.json({ success: true });
+//         } else {
+//             res.json({ success: false, message: 'No matching record found.' });
+//         }
+//     } catch (error) {
+//         console.error("❌ Error updating report status:", error);
+//         res.status(500).json({ success: false, message: 'Internal Server Error' });
+//     }
+// });
+
+  
+
 
 module.exports = router;
