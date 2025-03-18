@@ -96,13 +96,34 @@
     
         try {
             const reportsNew = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'new'");
-            const reportsPending = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'pending'");
-            const reportsSolved = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'solved'");
+            //const reportsPending = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'pending'");
+            const reportsSolved = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'action taken'");
     
             res.render('sh-reports', {
                 name,
                 reportsNew: Array.isArray(reportsNew) ? reportsNew : Object.values(reportsNew),
-                reportsPending: Array.isArray(reportsPending) ? reportsPending : Object.values(reportsPending),
+                //reportsPending: Array.isArray(reportsPending) ? reportsPending : Object.values(reportsPending),
+                reportsSolved: Array.isArray(reportsSolved) ? reportsSolved : Object.values(reportsSolved),
+            });
+        } catch (err) {
+            console.error("Error fetching reports:", err.message);
+            res.status(500).send("Server Error");
+        }
+    });
+
+
+    router.get('/investreports', authenticateSecurityHead, async (req, res) => {
+        const { name } = req.session.user;
+    
+        try {
+            const reportsNew = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.department FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'pending';");
+            //const reportsPending = await pool.query("SELECT uid, department, created_at FROM investigation WHERE report_status = 'pending'");
+            const reportsSolved = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.department FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'solved';");
+    
+            res.render('sh-investreports', {
+                name,
+                reportsNew: Array.isArray(reportsNew) ? reportsNew : Object.values(reportsNew),
+                //reportsPending: Array.isArray(reportsPending) ? reportsPending : Object.values(reportsPending),
                 reportsSolved: Array.isArray(reportsSolved) ? reportsSolved : Object.values(reportsSolved),
             });
         } catch (err) {

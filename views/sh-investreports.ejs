@@ -109,15 +109,13 @@
             </div>
 
             <div class="content-area">
-                <h2>Incident Reports</h2>
+                <h2>Investigation Reports</h2>
                 <!-- Tabs for toggling -->
                 <div class="tabs-container" style="display: flex; align-items: center; justify-content: space-between;">
                     <div class="tabs">
-                        <div class="tab active" id="new-tab">New Reports</div>
-                        <div class="tab" id="pending-tab">Action Taken</div>
-                        <!-- <div class="tab" id="solved-tab">Solved</div> -->
+                        <div class="tab active" id="new-tab">Pending</div>
+                        <div class="tab" id="pending-tab">Solved</div>
                     </div>
-                    <button class="btn take-action" onclick="window.location.href='/security-head/investigation'">Take Action</button>
                 </div>
                 
 
@@ -126,23 +124,22 @@
                     <ul class="reports-list">
                         <% reportsNew.forEach(report => { %>
                             <li class="report-item">
-                                <span>UID: <%= report.uid %> | Incident: <%= report.type_of_incident %> | Date: <%= report.created_at %></span>
+                                <span>UID: <%= report.uid %> &nbsp;&nbsp;|&nbsp;&nbsp; Incident: <%= report.type_of_incident %> &nbsp;&nbsp;|&nbsp;&nbsp; Send to: <%= report.department %></span>
                                 <div class="report-buttons">
                                     <button class="btn">Print</button>
-                                    <!-- <button class="btn">Done</button> -->
+                                    
                                 </div>
                             </li>
                         <% }) %>
                     </ul>
                 </div>
 
-
                 
                 <div class="reports-section" id="solved-reports" style="display: none;">
                     <ul class="reports-list">
                         <% reportsSolved.forEach(report => { %>
                             <li class="report-item">
-                                <span>UID: <%= report.uid %> | Incident: <%= report.type_of_incident %> | Date: <%= report.created_at %></span>
+                                <span>UID: <%= report.uid %> &nbsp;&nbsp;|&nbsp;&nbsp; Incident: <%= report.type_of_incident %> &nbsp;&nbsp;|&nbsp;&nbsp; Send to: <%= report.department %></span>
                                 <div class="report-buttons">
                                     <button class="btn">Print</button>
                                     <!-- <button class="btn">Take Action</button> -->

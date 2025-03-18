@@ -604,6 +604,21 @@ app.post('/submit-investigation', async (req, res) => {
         console.error('Error processing form submission:', error.message, error.stack);
         res.status(400).send('Invalid form data. Please check your inputs.');
     }
+
+    
+    try {
+        // Update report_status for rows with matching UID in the investigation table
+        await pool.query(`
+            UPDATE incidents
+            SET report_status = 'action taken'
+            WHERE uid IN (SELECT uid FROM investigation);
+        `);
+    } catch (error) {
+        console.error('Error updating report_status', error);
+        res.status(500).send('Server error');
+    }
+
+
 });
 
 
