@@ -122,6 +122,8 @@ app.use('/it-admin', require('./routes/itAdmin'));
 app.use('/department', require('./routes/departmentRoutes'));
 app.use('/assets', express.static(__dirname + '/assets'));
 
+// Register the visualization routes
+app.use('/visualization', require('./routes/visualization'));
 
 // ✅ Login page
 app.get('/', (req, res) => {

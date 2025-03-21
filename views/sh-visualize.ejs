@@ -3,33 +3,567 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualize - Security Head</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <title>Security Head Dashboard</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        .filter-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .threshold-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .threshold-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .threshold-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .threshold-values {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .current-value, .threshold-value {
+            text-align: center;
+        }
+        
+        .value-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .value-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .status-indicator {
+            height: 8px;
+            margin-top: 10px;
+            border-radius: 4px;
+            background-color: #eee;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .status-bar {
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        
+        .status-safe {
+            background-color: #4caf50;
+        }
+        
+        .status-warning {
+            background-color: #ff9800;
+        }
+        
+        .status-danger {
+            background-color: #f44336;
+        }
+        
+        /* New styles for monthly trends chart */
+        .monthly-chart-box {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        
+        .monthly-chart-wrapper {
+            height: 300px;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Sidebar -->
-        <%- include('partials/sidebar', { active: 'Visualize' }) %>
+        <!-- Left Sidebar -->
+        <div class="container">
+            <!-- Sidebar -->
+            <%- include('partials/sidebar', { active: 'reports' }) %>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Bar -->
             <div class="top-bar">
                 <div class="profile">
-                    <span>Welcome,<%=name%></span>
+                    <span>Welcome, Security Head</span>
                     <div class="profile-icon">👤</div>
                 </div>
                 <div class="notification">
                     <span>🔔</span>
                 </div>
             </div>
-
-            <!-- Content Area -->
-            <div class="content-area" id="content-area">
-                <h2>Visualisation</h2>
-                <p>KPI based data visualization.</p>
+            <div class="content-area">
+                <h2>Security Incident Visualization</h2>
+                
+                <!-- Time Period Filter -->
+                <div class="filter-container">
+                    <div class="filter-group">
+                        <label for="timeFilter">Time Period:</label>
+                        <select id="timeFilter" class="filter-dropdown">
+                            <option value="6month">6 Months</option>
+                            <option value="yearly">Full Year</option>
+                        </select>
+                    </div>
+                    <button id="applyFilter" class="filter-button">Apply Filter</button>
+                </div>
+                
+                <!-- Incident Types Chart Section -->
+                <div class="chart-box">
+                    <div class="chart-controls">
+                        <h3>Incident Types Distribution</h3>
+                        <div class="chart-type-selector">
+                            <label for="chartType">Chart Type:</label>
+                            <select id="chartType" class="filter-dropdown">
+                                <option value="pie">Pie Chart</option>
+                                <option value="bar">Bar Chart</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="incidentTypesChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Threshold Section -->
+                <h3>Current Incidents vs Threshold</h3>
+                <div class="threshold-container" id="thresholdContainer">
+                    <!-- Dynamic threshold cards will be inserted here -->
+                </div>
+                
+                <!-- Monthly Incidents by Type Chart (NEW) -->
+                <div class="monthly-chart-box">
+                    <div class="chart-controls">
+                        <h3>Monthly Incidents by Type</h3>
+                        <div class="filter-group">
+                            <label for="incidentTypeFilter">Incident Type:</label>
+                            <select id="incidentTypeFilter" class="filter-dropdown">
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="monthly-chart-wrapper">
+                        <canvas id="monthlyIncidentChart"></canvas>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
+    
+    <!-- Sample data for testing -->
+  
+    
+    <!-- Chart initialization script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let incidentChart; // Variable to store incident types chart instance
+            let monthlyChart; // Variable to store monthly incidents chart instance
+            let currentChartType = 'pie';
+            let currentIncidentType = "";
+            
+            // Function to fetch and update the incident types chart
+            async function fetchIncidentData(period = '6month', chartType = 'pie') {
+                try {
+                    const response = await fetch(`/visualization/incidents?period=${period}&chartType=${chartType}`, {
+                        credentials: 'include' // Include credentials for auth
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    updateIncidentTypesChart(chartType, data);
+                } catch (error) {
+                    console.error('Error fetching incident data:', error);
+                    // Handle error - maybe show an error message
+                }
+            }
+        
+            // Function to initialize or update the incident types chart
+            function updateIncidentTypesChart(chartType, incidentData) {
+                const ctx = document.getElementById('incidentTypesChart').getContext('2d');
+        
+                // Destroy previous chart if it exists
+                if (incidentChart) {
+                    incidentChart.destroy();
+                }
+        
+                // Chart configuration
+                const chartConfig = {
+                    type: chartType,
+                    data: {
+                        labels: incidentData.labels,
+                        datasets: [{
+                            label: 'Number of Incidents',
+                            data: chartType === 'bar' ? incidentData.datasets[0].data : incidentData.values,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.7)',
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)',
+                                'rgba(153, 102, 255, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: chartType === 'pie' ? 'right' : 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (tooltipItem) {
+                                        const dataset = tooltipItem.dataset;
+                                        const total = dataset.data.reduce((acc, data) => acc + data, 0);
+                                        const value = dataset.data[tooltipItem.dataIndex];
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+        
+                // Add scales if bar chart
+                if (chartType === 'bar') {
+                    chartConfig.options.scales = {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Incidents'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Incident Type'
+                            }
+                        }
+                    };
+                }
+                else
+                {
+                    config.options.plugins.tooltip = {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const value = context.raw;
+                                const percentage = Math.round((value / total) * 100);
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    };
+                }
+                
+        
+                // Create new chart
+                incidentChart = new Chart(ctx, chartConfig);
+            }
+        
+            // Function to render threshold cards with proper error handling
+            async function renderThresholdCards() {
+                const container = document.getElementById('thresholdContainer');
+                
+                // Show loading state
+                container.innerHTML = '<div class="loading">Loading threshold data...</div>';
+                
+                try {
+                    // Fix: Use the correct endpoint URL
+                    const response = await fetch('/visualization/thresholds', {
+                        credentials: 'include'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const thresholdData = await response.json();
+                    
+                    // Clear container after successful data fetch
+                    container.innerHTML = '';
+                    
+                    if (!thresholdData || !Array.isArray(thresholdData) || thresholdData.length === 0) {
+                        container.innerHTML = '<div class="no-data">No threshold data available</div>';
+                        return;
+                    }
+                    
+                    thresholdData.forEach(item => {
+                        // Make sure we have valid data
+                        const currentCount = Number(item.currentCount) || 0;
+                        const thresholdValue = Number(item.thresholdValue) || 100;
+                        const percentage = (currentCount / thresholdValue) * 100;
+                        let statusClass = 'status-safe';
+                        
+                        if (percentage >= 90) {
+                            statusClass = 'status-danger';
+                        } else if (percentage >= 75) {
+                            statusClass = 'status-warning';
+                        }
+                        
+                        const card = document.createElement('div');
+                        card.className = 'threshold-card';
+                        card.innerHTML = `
+                            <div class="threshold-title">${item.incidentName || 'Unknown'}</div>
+                            <div class="threshold-values">
+                                <div class="current-value">
+                                    <div class="value-number">${currentCount}</div>
+                                    <div class="value-label">Current</div>
+                                </div>
+                                <div class="threshold-value">
+                                    <div class="value-number">${thresholdValue}</div>
+                                    <div class="value-label">Threshold</div>
+                                </div>
+                            </div>
+                            <div class="status-indicator">
+                                <div class="status-bar ${statusClass}" style="width: ${Math.min(percentage, 100)}%"></div>
+                            </div>
+                            <div style="text-align: right; font-size: 12px; margin-top: 5px;">
+                                ${Math.round(percentage)}% of threshold
+                            </div>
+                        `;
+                        
+                        container.appendChild(card);
+                    });
+                } catch (error) {
+                    console.error('Error fetching threshold data:', error);
+                    container.innerHTML = '<div class="error">Error loading threshold data</div>';
+                }
+            }
+            
+            // Function to populate incident type dropdown
+            async function populateIncidentTypeDropdown() {
+                const dropdown = document.getElementById("incidentTypeFilter");
+                dropdown.innerHTML = '<option value="">Loading...</option>';
+                
+                try {
+                    const response = await fetch("/visualization/incident-types", {
+                        credentials: 'include'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const incidentTypes = await response.json();
+                    
+                    // Clear the dropdown
+                    dropdown.innerHTML = '';
+                    
+                    // Make sure we have an array of types
+                    if (!incidentTypes || !Array.isArray(incidentTypes) || incidentTypes.length === 0) {
+                        dropdown.innerHTML = '<option value="">No incident types available</option>';
+                        return;
+                    }
+                    
+                    // Add options for each incident type
+                    incidentTypes.forEach(type => {
+                        if (type) { // Only add if type is not null/undefined/empty
+                            const option = document.createElement("option");
+                            option.value = type;
+                            option.textContent = type;
+                            dropdown.appendChild(option);
+                        }
+                    });
+                    
+                    // Select the first option by default
+                    if (incidentTypes.length > 0) {
+                        dropdown.value = incidentTypes[0];
+                        currentIncidentType = incidentTypes[0];
+                        
+                        // Fetch data for the selected incident type
+                        fetchMonthlyData(currentIncidentType);
+                    }
+                } catch (error) {
+                    console.error("Error loading incident types:", error);
+                    dropdown.innerHTML = '<option value="">Error loading types</option>';
+                }
+            }
+            
+            // Function to fetch monthly data
+            async function fetchMonthlyData(incidentType) {
+                if (!incidentType) {
+                    console.error("No incident type specified for monthly data");
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/visualization/monthly?incidentType=${encodeURIComponent(incidentType)}`, {
+                        credentials: 'include'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Update the chart with the fetched data
+                    updateMonthlyChart(data.labels, incidentType, data.data[incidentType]);
+                    
+                } catch (error) {
+                    console.error(`Error fetching monthly data for ${incidentType}:`, error);
+                    // Show an error in the chart area or use sample data as fallback
+                    
+                    // Create empty data as fallback
+                    const emptyData = Array(12).fill(0);
+                    updateMonthlyChart(
+                        ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                        incidentType, 
+                        emptyData
+                    );
+                }
+            }
+            
+            // Function to update monthly chart
+            function updateMonthlyChart(labels, incidentType, data) {
+                const ctx = document.getElementById('monthlyIncidentChart').getContext('2d');
+                
+                // Destroy previous chart if it exists
+                if (monthlyChart) {
+                    monthlyChart.destroy();
+                }
+                
+                // Default labels if none provided
+                const chartLabels = labels || ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                
+                // Default data if none provided
+                const chartData = data || Array(12).fill(0);
+                
+                monthlyChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: `${incidentType} Incidents`,
+                            data: chartData,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: true,
+                            borderWidth: 2,
+                            tension: 0.2,
+                            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                display: true, 
+                                position: 'top' 
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(tooltipItems) {
+                                        return tooltipItems[0].label;
+                                    },
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw} incidents`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                title: { 
+                                    display: true, 
+                                    text: 'Number of Incidents' 
+                                },
+                                ticks: {
+                                    precision: 0
+                                }
+                            },
+                            x: { 
+                                title: { 
+                                    display: true, 
+                                    text: 'Month' 
+                                } 
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Set up event listeners
+            document.getElementById('chartType').addEventListener('change', function() {
+                currentChartType = this.value;
+                fetchIncidentData(document.getElementById('timeFilter').value, currentChartType);
+            });
+            
+            document.getElementById('incidentTypeFilter').addEventListener('change', function() {
+                const selectedType = this.value;
+                if (selectedType) {
+                    currentIncidentType = selectedType;
+                    fetchMonthlyData(selectedType);
+                }
+            });
+            
+            document.getElementById('applyFilter').addEventListener('click', function() {
+                const timePeriod = document.getElementById('timeFilter').value;
+                fetchIncidentData(timePeriod, currentChartType);
+            });
+            
+            // Initialize everything
+            fetchIncidentData('6month', 'pie');
+            renderThresholdCards();
+            populateIncidentTypeDropdown();
+        });
+        
+    </script>
 </body>
 </html>
