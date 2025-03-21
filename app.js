@@ -651,3 +651,31 @@ if (process.env.NODE_ENV === 'development') {
         next();
     });
 }
+
+
+const isAuthenticated = (req, res, next) => {
+    if (!req.session.user || req.session.user.type !== 'department') {  
+        return res.status(403).send('Unauthorized Access');
+    }
+    next();
+};
+
+app.post('/:departmentID/notifications/update-report-status', isAuthenticated, async (req, res) => {
+    const { uid } = req.body;
+    const { departmentID } = req.params;
+
+    try {
+        const result = await pool.execute(
+            'UPDATE investigation SET report_status = "solved" WHERE uid = ?',
+            [uid]
+        );
+        if (result.affectedRows > 0) {
+            res.json({ success: true });
+        } else {
+            res.json({ success: false, message: "No report found to update." });
+        }
+    } catch (error) {
+        console.error("Error updating report status:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+});

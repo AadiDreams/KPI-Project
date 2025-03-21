@@ -249,35 +249,28 @@ router.post('/logout', (req, res) => {
     });
 });
 
+//action taken button
+router.post('/:departmentID/notifications/update-report-status', isAuthenticated, async (req, res) => {
+    const { uid } = req.body;
+    const { departmentID } = req.params;
 
-// router.post('/:departmentID/notifications/update-status', isAuthenticated, async (req, res) => {
-//     const { uid } = req.body;
-//     const { departmentID } = req.params;
+    try {
+        const [result] = await db.execute(
+            'UPDATE investigation SET report_status = "solved" WHERE uid = ? AND department = ?',
+            [uid, departmentID]
+        );
+        if (result.affectedRows > 0) {
+            res.json({ success: true });
+        } else {
+            res.json({ success: false, message: "No report found to update." });
+        }
+    } catch (error) {
+        console.error("Error updating report status:", error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+});
 
-//     // Validate input
-//     if (!uid || !departmentID) {
-//         return res.status(400).json({ success: false, message: 'Invalid UID or Department ID.' });
-//     }
 
-//     try {
-//         // Update the report status in the database
-//         const result = await pool.query(
-//             "UPDATE investigation SET report_status = 'solved' WHERE uid = ? AND department = ?",
-//             [uid, departmentID]
-//         );
-
-//         if (result.affectedRows > 0) {
-//             res.json({ success: true });
-//         } else {
-//             res.json({ success: false, message: 'No matching record found.' });
-//         }
-//     } catch (error) {
-//         console.error("❌ Error updating report status:", error);
-//         res.status(500).json({ success: false, message: 'Internal Server Error' });
-//     }
-// });
-
-  
 
 
 module.exports = router;
