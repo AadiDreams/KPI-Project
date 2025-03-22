@@ -9,6 +9,7 @@
     <!-- Chart.js Library -->
     <script src="../assets/js/chart.min.js"></script>
     <style>
+        /* Keeping original styles */
         .filter-container {
             display: flex;
             justify-content: space-between;
@@ -111,8 +112,30 @@
         }
         
         .monthly-chart-wrapper {
+            width: 100%;
             height: 300px;
-            margin-top: 15px;
+        }
+
+        /* Chart box styling */
+        .chart-box {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .chart-wrapper {
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        /* Canvas specific styling - this directly controls the chart size */
+        #incidentTypesChart {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 auto;
+            display: block;
         }
     </style>
 </head>
@@ -162,7 +185,7 @@
                         </div>
                     </div>
                     <div class="chart-wrapper">
-                        <canvas id="incidentTypesChart"></canvas>
+                        <canvas id="incidentTypesChart" width="400" height="300"></canvas>
                     </div>
                 </div>
                 
@@ -224,12 +247,12 @@
             // Function to initialize or update the incident types chart
             function updateIncidentTypesChart(chartType, incidentData) {
                 const ctx = document.getElementById('incidentTypesChart').getContext('2d');
-        
+            
                 // Destroy previous chart if it exists
                 if (incidentChart) {
                     incidentChart.destroy();
                 }
-        
+            
                 // Chart configuration
                 const chartConfig = {
                     type: chartType,
@@ -237,7 +260,8 @@
                         labels: incidentData.labels,
                         datasets: [{
                             label: 'Number of Incidents',
-                            data: chartType === 'bar' ? incidentData.datasets[0].data : incidentData.values,
+                            // Use the same data source regardless of chart type
+                            data: incidentData.datasets ? incidentData.datasets[0].data : incidentData.data,
                             backgroundColor: [
                                 'rgba(255, 99, 132, 0.7)',
                                 'rgba(54, 162, 235, 0.7)',
@@ -256,10 +280,20 @@
                         }]
                     },
                     options: {
-                        responsive: true,
+                        responsive: true , // Set to false to use exact dimensions
+                        maintainAspectRatio: true, // Set to false to avoid aspect ratio constraints
+                        aspectRatio: 2, // Aspect ratio for the chart`s canvas
+
+
                         plugins: {
                             legend: {
-                                position: chartType === 'pie' ? 'right' : 'top'
+                                position: chartType === 'pie' ? 'right' : 'top',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: {
+                                        size: 10
+                                    }
+                                }
                             },
                             tooltip: {
                                 callbacks: {
@@ -275,7 +309,7 @@
                         }
                     }
                 };
-        
+            
                 // Add scales if bar chart
                 if (chartType === 'bar') {
                     chartConfig.options.scales = {
@@ -283,36 +317,50 @@
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Number of Incidents'
+                                text: 'Number of Incidents',
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    size: 9
+                                }
                             }
                         },
                         x: {
                             title: {
                                 display: true,
-                                text: 'Incident Type'
+                                text: 'Incident Type',
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    size: 9
+                                }
                             }
                         }
                     };
                 }
-                else
-                {
-                    config.options.plugins.tooltip = {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const value = context.raw;
-                                const percentage = Math.round((value / total) * 100);
-                                return `${context.label}: ${value} (${percentage}%)`;
-                            }
-                        }
-                    };
-                }
-                
-        
+            
                 // Create new chart
                 incidentChart = new Chart(ctx, chartConfig);
             }
-        
+            
+            // Function to fetch incident data and update the chart
+            function fetchIncidentDataAndUpdateChart(chartType) {
+                fetch('/api/incident-stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        updateIncidentTypesChart(chartType, data);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching incident data:', error);
+                    });
+            }
+            
             // Function to render threshold cards with proper error handling
             async function renderThresholdCards() {
                 const container = document.getElementById('thresholdContainer');
@@ -504,7 +552,13 @@
                         plugins: {
                             legend: { 
                                 display: true, 
-                                position: 'top' 
+                                position: 'top',
+                                labels: {
+                                    boxWidth: 15,
+                                    font: {
+                                        size: 11
+                                    }
+                                }
                             },
                             tooltip: {
                                 callbacks: {
@@ -522,17 +576,31 @@
                                 beginAtZero: true, 
                                 title: { 
                                     display: true, 
-                                    text: 'Number of Incidents' 
+                                    text: 'Number of Incidents',
+                                    font: {
+                                        size: 11
+                                    }
                                 },
                                 ticks: {
-                                    precision: 0
+                                    precision: 0,
+                                    font: {
+                                        size: 10
+                                    }
                                 }
                             },
                             x: { 
                                 title: { 
                                     display: true, 
-                                    text: 'Month' 
-                                } 
+                                    text: 'Month',
+                                    font: {
+                                        size: 11
+                                    }
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 10
+                                    }
+                                }
                             }
                         }
                     }
