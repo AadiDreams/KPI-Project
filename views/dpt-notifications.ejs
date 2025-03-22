@@ -174,7 +174,39 @@
             });
         });
 
+        document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".btn.action-taken");
 
+    buttons.forEach(button => {
+        button.addEventListener("click", async (event) => {
+            const uid = event.target.getAttribute("data-uid");
+            const departmentID = window.location.pathname.split('/')[1]; // Extract departmentID from URL path
+            console.log("uid:", uid);
+            console.log("dept:", departmentID);
+
+            try {
+                const response = await fetch(`/${departmentID}/notifications/update-report-status`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ uid, departmentID }),
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("Report status updated successfully!");
+                } else {
+                    alert(result.message || "Failed to update report status. Please try again.");
+                }
+            } catch (error) {
+                console.error("Error updating report status:", error);
+                alert("An error occurred. Please try again later.");
+            }
+        });
+    });
+});
 
 
     </script>
