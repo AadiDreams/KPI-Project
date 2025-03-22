@@ -18,18 +18,17 @@ router.get('/:departmentID/home', isAuthenticated, async (req, res) => {
         }
 
         const departmentID = req.session.user.departmentID; // Get department ID from session
+        const deptID = departmentID.split('_')[1];
+        console.log(departmentID,deptID)
+        const [reportedIncidentsCount] = await pool.query('SELECT COUNT(*) AS count FROM incidents WHERE uid LIKE ?',[`IR/${deptID}%`]);
+        const [pendingActions] = await pool.query('SELECT COUNT(*) AS count FROM investigation WHERE department=? AND report_status="pending"',[departmentID]);
 
-        // Query to count incidents submitted by this department
-        const [result] = await db.execute(
-            'SELECT COUNT(*) AS total FROM incidents WHERE submitted_by = ?', 
-            [departmentID]
-        );
-
-        const reportedIncidents = result[0]?.total || 0; // Default to 0 if null
 
         res.render('dpt-home', { 
             departmentName: req.session.user.departmentName, 
             departmentID:departmentID,
+            reportedIncidentsCount: reportedIncidentsCount.count,
+            pendingActions: pendingActions.count,
             active: 'home',
             //reportedIncidents // Pass the value to EJS
         });

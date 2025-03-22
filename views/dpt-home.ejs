@@ -10,7 +10,7 @@
             padding: 20px;
         }
 
-        .dashboard-widgets {
+        .dashboard {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
@@ -32,6 +32,45 @@
         .widget p {
             font-size: 18px;
             margin: 0;
+        }
+
+        .recent-updates {
+            margin-top: 40px;
+        }
+
+        .recent-updates h3 {
+            color: #b30000;
+        }
+
+        .update-item {
+            background-color: #fff;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .update-item span {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            background-color: #b30000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background-color: #cc0000;
         }
     </style>
 </head>
@@ -56,6 +95,17 @@
                 <h2>Welcome to the Security Management System</h2>
                 <p>Here’s an overview of your recent activities and reports.</p>
 
+                <div class="dashboard">
+                    <div class="widget">
+                        <h3>Reported Incidents</h3>
+                        <p><%= reportedIncidentsCount %></p>
+                    </div>
+                    <div class="widget">
+                        <h3>Pending Actions</h3>
+                        <p><%= pendingActions %></p>
+                    </div>
+                    
+                </div>
                
             </div>
         </main>
