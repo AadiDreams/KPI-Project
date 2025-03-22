@@ -222,8 +222,10 @@ router.get('/:departmentID/notifications', isAuthenticated, async (req, res) => 
         }
         
 
-        const reportsNew = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.created_at FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'pending' AND investigation.department = ?;",
+        const reportsNew = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.created_at FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'new' AND investigation.department = ?;",
             [departmentID]);
+        const reportsPending = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.created_at FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'pending' AND investigation.department = ?;",
+                [departmentID]);
         const reportsSolved = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.created_at FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'solved' AND investigation.department = ?;",
             [departmentID]);
     
@@ -232,6 +234,7 @@ router.get('/:departmentID/notifications', isAuthenticated, async (req, res) => 
             departmentName: req.session.user.departmentName, 
             departmentID: departmentID,
             reportsNew: Array.isArray(reportsNew) ? reportsNew : Object.values(reportsNew),
+            reportsPending: Array.isArray(reportsPending) ? reportsPending : Object.values(reportsPending),
             reportsSolved: Array.isArray(reportsSolved) ? reportsSolved : Object.values(reportsSolved),
             active: 'notifications'
         });
@@ -248,29 +251,5 @@ router.post('/logout', (req, res) => {
         res.redirect('/login'); // Redirect to login page after logout
     });
 });
-
-//action taken button
-router.post('/:departmentID/notifications/update-report-status', isAuthenticated, async (req, res) => {
-    const { uid } = req.body;
-    const { departmentID } = req.params;
-
-    try {
-        const [result] = await db.execute(
-            'UPDATE investigation SET report_status = "solved" WHERE uid = ? AND department = ?',
-            [uid, departmentID]
-        );
-        if (result.affectedRows > 0) {
-            res.json({ success: true });
-        } else {
-            res.json({ success: false, message: "No report found to update." });
-        }
-    } catch (error) {
-        console.error("Error updating report status:", error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
-    }
-});
-
-
-
 
 module.exports = router;
