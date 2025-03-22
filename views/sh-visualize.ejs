@@ -9,23 +9,65 @@
     <!-- Chart.js Library -->
     <script src="../assets/js/chart.min.js"></script>
     <style>
-        /* Keeping original styles */
+        /* Updated filter container styles */
         .filter-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            padding: 10px;
-            background-color: #f5f5f5;
-            border-radius: 5px;
+            padding: 15px 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #eaeaea;
         }
         
         .filter-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         
+        .filter-group label {
+            font-weight: 500;
+            color: #444;
+        }
+        
+        .filter-dropdown {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .filter-dropdown:focus {
+            outline: none;
+            border-color: #ff6666;
+            box-shadow: 0 0 0 2px rgba(255, 102, 102, 0.1);
+        }
+        
+        .filter-button {
+            background-color: #ff4444;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .filter-button:hover {
+            background-color: #ff2222;
+        }
+        
+        .filter-button:active {
+            background-color: #e60000;
+        }
+        
+        /* Keeping other original styles */
         .chart-controls {
             display: flex;
             justify-content: space-between;
