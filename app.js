@@ -353,7 +353,7 @@ app.get("/uid_numbers", async (req, res) => {
     let connection;
     try {
         connection = await pool.getConnection();
-        const results = await connection.query("SELECT uid FROM incidents");
+        const results = await connection.query("SELECT uid FROM incidents WHERE created_at >= NOW() - INTERVAL 1 MONTH ORDER BY created_at DESC");
         
         console.log("✅ UID Numbers Fetched:", results);
         
@@ -660,14 +660,15 @@ const isAuthenticated = (req, res, next) => {
     next();
 };
 
+//action taken button in department login
 app.post('/:departmentID/notifications/update-report-status', isAuthenticated, async (req, res) => {
     const { uid } = req.body;
     const { departmentID } = req.params;
 
     try {
         const result = await pool.execute(
-            'UPDATE investigation SET report_status = "solved" WHERE uid = ?',
-            [uid]
+            'UPDATE investigation SET report_status = "pending" WHERE uid = ? AND department = ?',
+            [uid, departmentID]
         );
         if (result.affectedRows > 0) {
             res.json({ success: true });

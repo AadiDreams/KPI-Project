@@ -24,7 +24,7 @@
         try {
             // Query the database for updated counts
             const [newIncidents] = await pool.query('SELECT COUNT(*) AS count FROM incidents WHERE report_status = "new"');
-            const [pendingActions] = await pool.query('SELECT COUNT(*) AS count FROM incidents WHERE report_status = "pending"');
+            const [pendingActions] = await pool.query('SELECT COUNT(*) AS count FROM investigation WHERE report_status = "pending"');
     
             const thresholdAlerts = 2; // Replace with real logic if applicable
             const recentUpdates = [
@@ -95,9 +95,9 @@
         const { name } = req.session.user;
     
         try {
-            const reportsNew = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'new'");
+            const reportsNew = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'new' ORDER BY created_at DESC");
             //const reportsPending = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'pending'");
-            const reportsSolved = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'action taken'");
+            const reportsSolved = await pool.query("SELECT uid, type_of_incident, created_at FROM incidents WHERE report_status = 'action taken' ORDER BY created_at DESC");
     
             res.render('sh-reports', {
                 name,
@@ -116,14 +116,14 @@
         const { name } = req.session.user;
     
         try {
-            const reportsNew = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.department FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'pending';");
-            //const reportsPending = await pool.query("SELECT uid, department, created_at FROM investigation WHERE report_status = 'pending'");
-            const reportsSolved = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.department FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'solved';");
+            const reportsNew = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.department FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'new' ORDER BY investigation.created_at DESC;");
+            const reportsPending = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.department FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'pending' ORDER BY investigation.created_at DESC;");
+            const reportsSolved = await pool.query("SELECT investigation.uid, incidents.type_of_incident, investigation.department FROM investigation JOIN incidents ON investigation.uid = incidents.uid WHERE investigation.report_status = 'solved' ORDER BY investigation.created_at DESC;");
     
             res.render('sh-investreports', {
                 name,
                 reportsNew: Array.isArray(reportsNew) ? reportsNew : Object.values(reportsNew),
-                //reportsPending: Array.isArray(reportsPending) ? reportsPending : Object.values(reportsPending),
+                reportsPending: Array.isArray(reportsPending) ? reportsPending : Object.values(reportsPending),
                 reportsSolved: Array.isArray(reportsSolved) ? reportsSolved : Object.values(reportsSolved),
             });
         } catch (err) {
@@ -250,5 +250,27 @@
         }
     });
 
+
+    router.post(`/investreports/update-report-status`, authenticateSecurityHead, async (req, res) => {
+        const { uid } = req.body;
+        const { departmentID } = req.body;
+        try {
+            
+            const result = await pool.query(
+                'UPDATE investigation SET report_status = "solved" WHERE uid = ? AND department = ?',
+                [uid, departmentID]
+            );
     
+            if (result.affectedRows > 0) {
+                res.json({ success: true, message: "Report status updated successfully." });
+            } else {
+                res.json({ success: false, message: "No report found to update." });
+            }
+        } catch (error) {
+            console.error("Error updating report status:", error);
+            res.status(500).json({ success: false, message: "Internal Server Error" });
+        }
+    });
+    
+
     module.exports = router;
