@@ -66,6 +66,22 @@
         .filter-button:active {
             background-color: #e60000;
         }
+
+        /* Date input styles */
+        .date-input {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .date-input:focus {
+            outline: none;
+            border-color: #ff6666;
+            box-shadow: 0 0 0 2px rgba(255, 102, 102, 0.1);
+        }
         
         /* Keeping other original styles */
         .chart-controls {
@@ -202,14 +218,15 @@
             <div class="content-area">
                 <h2>Security Incident Visualization</h2>
                 
-                <!-- Time Period Filter -->
+                <!-- Date Range Filter -->
                 <div class="filter-container">
                     <div class="filter-group">
-                        <label for="timeFilter">Time Period:</label>
-                        <select id="timeFilter" class="filter-dropdown">
-                            <option value="6month">6 Months</option>
-                            <option value="yearly">Full Year</option>
-                        </select>
+                        <label for="startDate">Start Date:</label>
+                        <input type="date" id="startDate" class="date-input">
+                    </div>
+                    <div class="filter-group">
+                        <label for="endDate">End Date:</label>
+                        <input type="date" id="endDate" class="date-input">
                     </div>
                     <button id="applyFilter" class="filter-button">Apply Filter</button>
                 </div>
@@ -237,7 +254,7 @@
                     <!-- Dynamic threshold cards will be inserted here -->
                 </div>
                 
-                <!-- Monthly Incidents by Type Chart (NEW) -->
+                <!-- Monthly Incidents by Type Chart -->
                 <div class="monthly-chart-box">
                     <div class="chart-controls">
                         <h3>Monthly Incidents by Type</h3>
@@ -256,9 +273,6 @@
         </main>
     </div>
     
-    <!-- Sample data for testing -->
-  
-    
     <!-- Chart initialization script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -267,10 +281,26 @@
             let currentChartType = 'pie';
             let currentIncidentType = "";
             
+            // Set default dates (last 6 months)
+            const setDefaultDates = () => {
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setMonth(endDate.getMonth() - 6);
+                
+                document.getElementById('startDate').valueAsDate = startDate;
+                document.getElementById('endDate').valueAsDate = endDate;
+            };
+            
+            // Call to set default dates
+            setDefaultDates();
+            
             // Function to fetch and update the incident types chart
-            async function fetchIncidentData(period = '6month', chartType = 'pie') {
+            async function fetchIncidentData(startDate, endDate, chartType = 'pie') {
                 try {
-                    const response = await fetch(`/visualization/incidents?period=${period}&chartType=${chartType}`, {
+                    const url = `/visualization/incidents?startDate=${startDate}&endDate=${endDate}&chartType=${chartType}`;
+                    console.log('Fetching data from:', url);
+                    
+                    const response = await fetch(url, {
                         credentials: 'include' // Include credentials for auth
                     });
                     
@@ -322,11 +352,9 @@
                         }]
                     },
                     options: {
-                        responsive: true , // Set to false to use exact dimensions
-                        maintainAspectRatio: true, // Set to false to avoid aspect ratio constraints
-                        aspectRatio: 2, // Aspect ratio for the chart`s canvas
-
-
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 2,
                         plugins: {
                             legend: {
                                 position: chartType === 'pie' ? 'right' : 'top',
@@ -391,19 +419,7 @@
                 incidentChart = new Chart(ctx, chartConfig);
             }
             
-            // Function to fetch incident data and update the chart
-            function fetchIncidentDataAndUpdateChart(chartType) {
-                fetch('/api/incident-stats')
-                    .then(response => response.json())
-                    .then(data => {
-                        updateIncidentTypesChart(chartType, data);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching incident data:', error);
-                    });
-            }
-            
-            // Function to render threshold cards with proper error handling
+            // Function to fetch threshold data and render threshold cards
             async function renderThresholdCards() {
                 const container = document.getElementById('thresholdContainer');
                 
@@ -411,7 +427,6 @@
                 container.innerHTML = '<div class="loading">Loading threshold data...</div>';
                 
                 try {
-                    // Fix: Use the correct endpoint URL
                     const response = await fetch('/visualization/thresholds', {
                         credentials: 'include'
                     });
@@ -530,7 +545,14 @@
                 }
                 
                 try {
-                    const response = await fetch(`/visualization/monthly?incidentType=${encodeURIComponent(incidentType)}`, {
+                    // Get the date range from inputs
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    
+                    const url = `/visualization/monthly?incidentType=${encodeURIComponent(incidentType)}&startDate=${startDate}&endDate=${endDate}`;
+                    console.log('Fetching monthly data from:', url);
+                    
+                    const response = await fetch(url, {
                         credentials: 'include'
                     });
                     
@@ -545,8 +567,6 @@
                     
                 } catch (error) {
                     console.error(`Error fetching monthly data for ${incidentType}:`, error);
-                    // Show an error in the chart area or use sample data as fallback
-                    
                     // Create empty data as fallback
                     const emptyData = Array(12).fill(0);
                     updateMonthlyChart(
@@ -649,10 +669,32 @@
                 });
             }
             
+            // Date validation function
+            function validateDates() {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                
+                if (!startDate || !endDate) {
+                    alert('Please select both start and end dates');
+                    return false;
+                }
+                
+                if (new Date(startDate) > new Date(endDate)) {
+                    alert('Start date cannot be after end date');
+                    return false;
+                }
+                
+                return true;
+            }
+            
             // Set up event listeners
             document.getElementById('chartType').addEventListener('change', function() {
                 currentChartType = this.value;
-                fetchIncidentData(document.getElementById('timeFilter').value, currentChartType);
+                if (validateDates()) {
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    fetchIncidentData(startDate, endDate, currentChartType);
+                }
             });
             
             document.getElementById('incidentTypeFilter').addEventListener('change', function() {
@@ -664,16 +706,28 @@
             });
             
             document.getElementById('applyFilter').addEventListener('click', function() {
-                const timePeriod = document.getElementById('timeFilter').value;
-                fetchIncidentData(timePeriod, currentChartType);
+                if (validateDates()) {
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    
+                    // Fetch incident chart data with date range
+                    fetchIncidentData(startDate, endDate, currentChartType);
+                    
+                    // Update monthly chart if incident type is selected
+                    if (currentIncidentType) {
+                        fetchMonthlyData(currentIncidentType);
+                    }
+                }
             });
             
-            // Initialize everything
-            fetchIncidentData('6month', 'pie');
+            // Initialize everything with default dates
+            const defaultStartDate = document.getElementById('startDate').value;
+            const defaultEndDate = document.getElementById('endDate').value;
+            
+            fetchIncidentData(defaultStartDate, defaultEndDate, 'pie');
             renderThresholdCards();
             populateIncidentTypeDropdown();
         });
-        
     </script>
 </body>
 </html>
