@@ -60,40 +60,10 @@ router.get('/incident-types', authenticateSecurityHead, async (req, res) => {
     }
 });
 
-// Add a route to get incident statistics
-router.get('/incident-stats', authenticateSecurityHead, async (req, res) => {
-    try {
-        const [rows] = await pool.query(`
-            SELECT type_of_incident, COUNT(*) as count
-            FROM incidents
-            WHERE type_of_incident IS NOT NULL
-            GROUP BY type_of_incident
-            ORDER BY count DESC
-        `);
-        
-        // Format data for Chart.js
-        const labels = rows.map(row => row.type_of_incident);
-        const data = rows.map(row => row.count);
-        
-        res.json({
-            labels: labels,
-            data: data
-        });
-    } catch (error) {
-        console.error('Error fetching incident statistics:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
 // Visualization endpoint for incident types
 router.get('/incidents', authenticateSecurityHead, async (req, res) => {
     try {
-        const { period = '6month', chartType = 'pie' } = req.query;
-
-        // Validate period
-        if (!['6month', 'yearly'].includes(period)) {
-            console.warn('❌ Invalid period requested:', period);
-            return res.status(400).json({ error: 'Invalid period. Use "6month" or "yearly".' });
-        }
+        const { startDate, endDate, chartType = 'pie' } = req.query;
 
         // Validate chartType
         if (!['bar', 'pie'].includes(chartType)) {
@@ -101,34 +71,33 @@ router.get('/incidents', authenticateSecurityHead, async (req, res) => {
             return res.status(400).json({ error: 'Invalid chartType. Use "bar" or "pie".' });
         }
 
-        // Calculate the start date based on the period
-        const currentDate = new Date();
-        let startDate = new Date(currentDate);
-        
-        if (period === '6month') {
-            startDate.setMonth(currentDate.getMonth() - 6);
-        } else {
-            startDate.setFullYear(currentDate.getFullYear() - 1);
+        // Validate dates
+        if (!startDate || !endDate) {
+            console.warn('❌ Missing date parameters');
+            return res.status(400).json({ error: 'Both startDate and endDate are required.' });
         }
 
-        const formattedStartDate = startDate.toISOString().split('T')[0];
-        console.log('📅 Using start date:', formattedStartDate);
+        // Format dates for database query
+        const formattedStartDate = new Date(startDate).toISOString().split('T')[0];
+        const formattedEndDate = new Date(endDate).toISOString().split('T')[0];
+        
+        console.log('📅 Using date range:', formattedStartDate, 'to', formattedEndDate);
 
-        // Modified query to handle BigInt
+        // Modified query to handle BigInt and date range
         const query = `
             SELECT 
                 COALESCE(type_of_incident, 'Unknown') as type_of_incident, 
                 CAST(COUNT(*) AS DECIMAL(10,0)) as count 
             FROM incidents 
-            WHERE DATE(created_at) >= ? 
+            WHERE DATE(date) >= ? AND DATE(date) <= ?
                 AND type_of_incident IS NOT NULL 
                 AND type_of_incident != ''
             GROUP BY type_of_incident 
             ORDER BY count DESC
         `;
 
-        console.log('🔍 Executing query with params:', [formattedStartDate]);
-        const [results] = await pool.query(query, [formattedStartDate]);
+        console.log('🔍 Executing query with params:', [formattedStartDate, formattedEndDate]);
+        const [results] = await pool.query(query, [formattedStartDate, formattedEndDate]);
         
         if (!results || results.length === 0) {
             console.log('⚠️ No incident data found for the period');
@@ -367,84 +336,86 @@ router.get('/visualization/monthly', authenticateSecurityHead, async (req, res) 
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-router.get('/thresholds', async (req, res) => {
-    try {
-        // Queries to get incident counts and thresholds
-        const incidentCountQuery = `
-            SELECT 
-                type_of_incident, 
-                COUNT(*) as currentCount 
-            FROM incidents 
-            WHERE type_of_incident IS NOT NULL 
-            GROUP BY type_of_incident
-        `;
+// router.get('/thresholds', async (req, res) => {
+//     try {
+//         // Queries to get incident counts and thresholds
+//         const incidentCountQuery = `
+//             SELECT 
+//                 type_of_incident, 
+//                 COUNT(*) as currentCount 
+//             FROM incidents 
+//             WHERE type_of_incident IS NOT NULL 
+//             GROUP BY type_of_incident
+//         `;
 
-        const thresholdQuery = `
-            SELECT 
-                incidentName,
-                thresholdValue 
-            FROM add_incidents 
-            WHERE incidentName IS NOT NULL
-        `;
+//         const thresholdQuery = `
+//             SELECT 
+//                 incidentName,
+//                 thresholdValue 
+//             FROM add_incidents 
+//             WHERE incidentName IS NOT NULL
+//         `;
 
-        // Execute queries and properly extract results
-        const [incidentResult] = await pool.query(incidentCountQuery) || [];
-        const [thresholdResult] = await pool.query(thresholdQuery) || [];
+//         // Execute queries and properly extract results
+//         const [incidentResult] = await pool.query(incidentCountQuery) || [];
+//         const [thresholdResult] = await pool.query(thresholdQuery) || [];
 
-        // Ensure the results are arrays
-        const incidentRows = Array.isArray(incidentResult) ? incidentResult : [incidentResult];
-        const thresholdRows = Array.isArray(thresholdResult) ? thresholdResult : [thresholdResult];
+//         // Ensure the results are arrays
+//         const incidentRows = Array.isArray(incidentResult) ? incidentResult : [incidentResult];
+//         const thresholdRows = Array.isArray(thresholdResult) ? thresholdResult : [thresholdResult];
 
-        console.log('Raw incident data:', JSON.stringify(incidentRows, (_, v) => 
-            typeof v === 'bigint' ? Number(v) : v, 2));
+//         console.log('Raw incident data:', JSON.stringify(incidentRows, (_, v) => 
+//             typeof v === 'bigint' ? Number(v) : v, 2));
 
-        console.log('Raw threshold data:', JSON.stringify(thresholdRows, (_, v) => 
-            typeof v === 'bigint' ? Number(v) : v, 2));
+//         console.log('Raw threshold data:', JSON.stringify(thresholdRows, (_, v) => 
+//             typeof v === 'bigint' ? Number(v) : v, 2));
 
-        // Convert results to arrays
-        const incidentCounts = incidentRows.map(row => ({
-            incidentName: row.type_of_incident,
-            currentCount: Number(row.currentCount) || 0
-        }));
+//         // Convert results to arrays
+//         const incidentCounts = incidentRows.map(row => ({
+//             incidentName: row.type_of_incident,
+//             currentCount: Number(row.currentCount) || 0
+//         }));
 
-        const thresholds = thresholdRows.map(row => ({
-            incidentName: row.incidentName,
-            thresholdValue: Number(row.thresholdValue) || 100
-        }));
+//         const thresholds = thresholdRows.map(row => ({
+//             incidentName: row.incidentName,
+//             thresholdValue: Number(row.thresholdValue) || 100
+//         }));
 
-        // Process the data
-        const thresholdData = incidentCounts.map(incident => ({
-            incidentName: incident.type_of_incident,
-            currentCount: incident.currentCount,
-            thresholdValue: thresholds.find(t => t.incidentName === incident.type_of_incident)?.thresholdValue || 100
-        }));
+//         // Process the data
+//         const thresholdData = incidentCounts.map(incident => ({
+//             incidentName: incident.type_of_incident,
+//             currentCount: incident.currentCount,
+//             thresholdValue: thresholds.find(t => t.incidentName === incident.type_of_incident)?.thresholdValue || 100
+//         }));
 
-        // Add missing thresholds
-        thresholds.forEach(threshold => {
-            if (!thresholdData.some(item => item.incidentName === threshold.incidentName)) {
-                thresholdData.push({
-                    incidentName: threshold.incidentName,
-                    currentCount: 0,
-                    thresholdValue: threshold.thresholdValue
-                });
-            }
-        });
+//         // Add missing thresholds
+//         thresholds.forEach(threshold => {
+//             if (!thresholdData.some(item => item.incidentName === threshold.incidentName)) {
+//                 thresholdData.push({
+//                     incidentName: threshold.incidentName,
+//                     currentCount: 0,
+//                     thresholdValue: threshold.thresholdValue
+//                 });
+//             }
+//         });
 
-        console.log('Final processed data:', JSON.stringify(thresholdData, null, 2));
+//         console.log('Final processed data:', JSON.stringify(thresholdData, null, 2));
 
-        res.json(thresholdData);
+//         res.json(thresholdData);
 
-    } catch (error) {
-        console.error('Error fetching threshold data:', error);
-        res.status(500).json({ 
-            error: 'Internal server error',
-            details: error.message
-        });
-    }
-});
+//     } catch (error) {
+//         console.error('Error fetching threshold data:', error);
+//         res.status(500).json({ 
+//             error: 'Internal server error',
+//             details: error.message
+//         });
+//     }
+// });
 
 
 // Main visualization page route
+
+
 router.get('/visualize', authenticateSecurityHead, async (req, res) => {
     const { name } = req.session.user;
 
