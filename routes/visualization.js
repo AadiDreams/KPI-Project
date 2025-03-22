@@ -60,6 +60,30 @@ router.get('/incident-types', authenticateSecurityHead, async (req, res) => {
     }
 });
 
+// Add a route to get incident statistics
+router.get('/incident-stats', authenticateSecurityHead, async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT type_of_incident, COUNT(*) as count
+            FROM incidents
+            WHERE type_of_incident IS NOT NULL
+            GROUP BY type_of_incident
+            ORDER BY count DESC
+        `);
+        
+        // Format data for Chart.js
+        const labels = rows.map(row => row.type_of_incident);
+        const data = rows.map(row => row.count);
+        
+        res.json({
+            labels: labels,
+            data: data
+        });
+    } catch (error) {
+        console.error('Error fetching incident statistics:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 // Visualization endpoint for incident types
 router.get('/incidents', authenticateSecurityHead, async (req, res) => {
     try {
