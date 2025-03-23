@@ -128,7 +128,7 @@
                             <li class="report-item">
                                 <span>UID: <%= report.uid %> | Incident: <%= report.type_of_incident %> | Date: <%= report.created_at %></span>
                                 <div class="report-buttons">
-                                    <button class="btn">Print</button>
+                                    <button class="print-btn" data-uid="<%=report.uid%>">Print</button>
                                     <!-- <button class="btn">Done</button> -->
                                 </div>
                             </li>
@@ -144,7 +144,7 @@
                             <li class="report-item">
                                 <span>UID: <%= report.uid %> | Incident: <%= report.type_of_incident %> | Date: <%= report.created_at %></span>
                                 <div class="report-buttons">
-                                    <button class="btn">Print</button>
+                                    <button class="print-btn" data-uid="<%=report.uid%>">Print</button>
                                     <!-- <button class="btn">Take Action</button> -->
                                 </div>
                             </li>
@@ -175,6 +175,20 @@
                 
             });
         });
+        document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".print-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            const uid = this.dataset.uid; // Extract UID
+
+            if (uid) {
+                const encodedUid = encodeURIComponent(uid); // Encode UID to prevent issues
+                window.open(`/security-head/incident/${encodedUid}/pdf`, "_blank");
+            } else {
+                console.error("UID is undefined!");
+            }
+        })
+        })
+    });
     </script>
 </body>
 </html>
