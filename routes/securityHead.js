@@ -4,6 +4,10 @@
     const pool = require('../db'); 
     const bcrypt = require('bcrypt');
     const upload = multer({ dest: 'public/images/' });
+    const fs=require('fs');
+    const PDFDocument=require('pdfkit');
+    const path=require('path');
+
     const authenticateSecurityHead = (req, res, next) => {
         if (!req.session.user || req.session.user.role !== 1) {
             console.log("Access denied: User not logged in or incorrect role");
@@ -46,7 +50,7 @@
         }
     });
     
-
+    
     router.get('/incidents', authenticateSecurityHead, async (req, res) => {
         try {
             console.log("Fetching incidents from the database...");
@@ -272,5 +276,158 @@
         }
     });
     
+    router.get('/incident/:uid/pdf', authenticateSecurityHead, async (req, res) => {
+        const uid = decodeURIComponent(req.params.uid);
+        console.log("Requested UID:", uid);
+    
+        try {
+            const rows = await pool.query("SELECT * FROM incidents WHERE uid = ?", [uid]);
+            if (!rows || rows.length === 0) {
+                console.log("Incident not found in database.");
+                return res.status(404).send('Incident not found.');
+            }
+    
+            const report = rows[0];
+            console.log("Report Data:", report);
+    
+            const safeUid = uid.replace(/\//g, "_");
+            const reportPath = path.join(__dirname, '../public/reports/',`incident-${safeUid}.pdf`);
+            fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+    
+            const doc = new PDFDocument({ margin: 50, size: 'A4' });
+            const writeStream = fs.createWriteStream(reportPath);
+    
+            writeStream.on('error', (err) => {
+                console.error("File writing error:", err);
+                return res.status(500).send("Error writing the PDF file.");
+            });
+    
+            res.setHeader('Content-Disposition', `attachment; filename="incident-${safeUid}.pdf"`);
+            res.setHeader('Content-Type', 'application/pdf');
+    
+            doc.pipe(writeStream);
+    
+            // 🎨 Updated Theme Colors
+            const colors = {
+                primary: '#b30000',
+                secondary: '#ff6666',
+                text: '#333333',
+                border: '#CCCCCC'
+            };
+    
+            // 🛠 Helper Functions
+            const formatDateTime = (dateTimeStr) => {
+                if (!dateTimeStr) return "N/A";
+                try {
+                    return new Date(dateTimeStr).toLocaleString('en-US', {
+                        year: 'numeric', month: '2-digit', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit', hour12: true
+                    });
+                } catch {
+                    return dateTimeStr;
+                }
+            };
+    
+            const isEmpty = (value) => value === null || value === undefined || value === '';
+    
+            const parseJSONSafely = (data) => {
+                try {
+                    return typeof data === "string" ? JSON.parse(data) : data || [];
+                } catch (error) {
+                    console.error("JSON Parse Error:", error);
+                    return [];
+                }
+            };
+    
+            const addSectionTitle = (text) => {
+                doc.fillColor(colors.primary).font("Helvetica-Bold").fontSize(14).text(text).moveDown(0.3);
+                doc.moveTo(50, doc.y).lineTo(doc.page.width - 50, doc.y).strokeColor(colors.secondary).stroke();
+                doc.moveDown(0.5);
+            };
+    
+            const addSectionContent = (labels, values) => {
+                labels.forEach((label, index) => {
+                    if (!isEmpty(values[index])) {
+                        doc.font("Helvetica-Bold").text(`${label}: `, { continued: true }).font("Helvetica").text(values[index]);
+                    }
+                });
+                doc.moveDown(0.5);
+            };
+    
+            // 🏷 Report Header
+            doc.font("Helvetica-Bold").fontSize(22).fillColor(colors.primary).text("INCIDENT REPORT", { align: "center" }).moveDown(1);
+    
+            // 🔹 Incident Details
+            addSectionTitle("1. Basic Incident Details");
+            addSectionContent(["UID", "Date", "Incident Time", "Location", "Type of Incident", "Description"], [
+                report.uid, formatDateTime(report.date), report.incident_time, report.location, report.type_of_incident, report.description
+            ]);
+    
+            // 🚑 Medical & Alert Information
+            addSectionTitle("2. Medical & Alert Information");
+            addSectionContent(["Alert Received By", "Alerted By", "Alert Time", "Medical Support", "Doctor", "Nurse", "Ambulance Service"], [
+                report.alert_received_by, report.alerted_by, report.alert_time, report.medical_support, report.name_of_doctor, report.name_of_nurse, report.ambulance_service
+            ]);
+    
+            // 🚔 Legal & Police Information
+            addSectionTitle("3. Legal & Police Information");
+            addSectionContent(["Police Notified", "Police Station", "Legal Action", "Reporting Time"], [
+                report.police_notification, report.police_station, report.legal_action, report.reporting_time
+            ]);
+    
+            // 🕒 Chronological Events
+            const events = parseJSONSafely(report.chronological_events);
+            if (events.length > 0) {
+                addSectionTitle("4. Chronological Events");
+                events.forEach((event, index) => {
+                    doc.text(`${index + 1}. Time: ${event.time}, Description: ${event.description}`);
+                });
+                doc.moveDown(1);
+            }
+    
+            // 👀 Witnesses
+            const witnesses = parseJSONSafely(report.witnesses);
+            if (witnesses.length > 0) {
+                addSectionTitle("5. Witnesses");
+                witnesses.forEach((w, index) => {
+                    doc.text(`${index + 1}. Name: ${w.name}, Organization: ${w.organization}, Contact: ${w.contact}`);
+                });
+                doc.moveDown(1);
+            }
+    
+            // 🔍 Additional Details
+            addSectionTitle("6. Additional Details");
+            addSectionContent(["Incident Details", "Damage Details", "Contributing Factors", "Contributing Factors Details", "Recommendations", "Follow-up Actions", "Comments"], [
+                report.incident_details, report.damage_details, report.contributing_factors, report.contributing_factors_details, report.recommendations, report.follow_up_actions, report.comments
+            ]);
+    
+            // 📜 Report Submission
+            addSectionTitle("7. Report Submission");
+            addSectionContent(["Submitted By", "Designation", "Created At"], [
+                report.submitted_by, report.designation, formatDateTime(report.created_at)
+            ]);
+    
+            // 📌 Footer
+            doc.fillColor(colors.text).font("Helvetica-Oblique").fontSize(9)
+                .text(`Generated on: ${new Date().toLocaleString()}`, 50, doc.page.height - 50, { align: "left" })
+                .text("This report is confidential and intended for authorized personnel only.", doc.page.width / 2, doc.page.height - 50, { align: "center" })
+                .text(`Page 1 of 1`, doc.page.width - 50, doc.page.height - 50, { align: "right" });
+    
+            // ✅ Finalize PDF
+            doc.end();
+            writeStream.on("finish", () => {
+                res.download(reportPath, (err) => {
+                    if (err) console.error("Error sending file:", err);
+                    setTimeout(() => fs.unlink(reportPath, (unlinkErr) => {
+                        if (unlinkErr) console.error("Error deleting file:", unlinkErr);
+                    }), 2000);
+                });
+            });
+    
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            res.status(500).send("Server Error");
+        }
+    });
 
-    module.exports = router;
+module.exports = router;
