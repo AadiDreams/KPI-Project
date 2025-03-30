@@ -195,7 +195,37 @@
             margin: 0 auto;
             display: block;
         }
+
+        .filter-button span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #downloadCharts {
+            background-color: #ff4444;  /* Same as filter button */
+        }
+
+        #downloadCharts:hover {
+            background-color: #ff2222;  /* Same as filter button hover */
+        }
+
+        #downloadCharts:active {
+            background-color: #e60000;  /* Same as filter button active */
+        }
+
+        #downloadCharts:disabled {
+            background-color: #ffcccc;
+            cursor: not-allowed;
+        }
+
+        #downloadCharts:disabled:hover {
+            background-color: #ffcccc;
+        }
     </style>
+    <!-- Add these libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -235,12 +265,17 @@
                 <div class="chart-box">
                     <div class="chart-controls">
                         <h3>Incident Types Distribution</h3>
-                        <div class="chart-type-selector">
-                            <label for="chartType">Chart Type:</label>
-                            <select id="chartType" class="filter-dropdown">
-                                <option value="pie">Pie Chart</option>
-                                <option value="bar">Bar Chart</option>
-                            </select>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <div class="chart-type-selector">
+                                <label for="chartType">Chart Type:</label>
+                                <select id="chartType" class="filter-dropdown">
+                                    <option value="pie">Pie Chart</option>
+                                    <option value="bar">Bar Chart</option>
+                                </select>
+                            </div>
+                            <button id="downloadCharts" class="filter-button">
+                                <span>📥 Download Charts</span>
+                            </button>
                         </div>
                     </div>
                     <div class="chart-wrapper">
@@ -727,6 +762,105 @@
             fetchIncidentData(defaultStartDate, defaultEndDate, 'pie');
             renderThresholdCards();
             populateIncidentTypeDropdown();
+
+            // Add this inside your existing DOMContentLoaded event listener
+            // After the other chart initialization code
+
+            async function generatePDF() {
+                try {
+                    const downloadBtn = document.getElementById('downloadCharts');
+                    downloadBtn.disabled = true;
+                    downloadBtn.innerHTML = '<span>⌛ Generating PDF...</span>';
+
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'pt', // Changed to points for better control
+                        format: [1280, 720]
+                    });
+
+                    // Get chart data
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    const selectedChartType = document.getElementById('chartType').value;
+                    const dateRange = `Date Range: ${startDate} to ${endDate}`;
+
+                    // Get chart data and colors
+                    const chart = Chart.getChart('incidentTypesChart');
+                    const labels = chart.data.labels;
+                    const data = chart.data.datasets[0].data;
+                    const colors = chart.data.datasets[0].backgroundColor;
+                    const total = data.reduce((acc, val) => acc + val, 0);
+
+                    // Calculate percentages
+                    const percentages = data.map(value => ((value / total) * 100).toFixed(1));
+
+                    // Add title and date range (with smaller font sizes)
+                    doc.setFontSize(20);
+                    doc.text('Incident Types Distribution', 40, 40);
+                    doc.setFontSize(12);
+                    doc.text(dateRange, 40, 60);
+
+                    // Capture the chart
+                    const chartCanvas = document.getElementById('incidentTypesChart');
+                    const chartImage = await html2canvas(chartCanvas, {
+                        scale: 1.5,
+                        logging: false,
+                        useCORS: true,
+                        allowTaint: true
+                    });
+
+                    // Convert to image and calculate dimensions
+                    const imgData = chartImage.toDataURL('image/png');
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const chartWidth = pageWidth * 0.6; // Chart takes 60% of width
+                    const chartHeight = (chartImage.height * chartWidth) / chartImage.width;
+
+                    // Add the chart on the left side
+                    doc.addImage(imgData, 'PNG', 40, 80, chartWidth, chartHeight);
+
+                    // Add percentage breakdown on the right side
+                    let yPos = 100; // Start position for percentage breakdown
+                    doc.setFontSize(14);
+                    doc.text('Percentage Breakdown:', pageWidth * 0.65, yPos);
+                    
+                    yPos += 30;
+                    doc.setFontSize(12);
+
+                    // Add color-coded percentages
+                    labels.forEach((label, index) => {
+                        // Convert rgba color to hex
+                        const color = colors[index].replace(/^rgba?\(|\s+|\)$/g, '').split(',');
+                        const hex = '#' + ((1 << 24) + (parseInt(color[0]) << 16) + 
+                                         (parseInt(color[1]) << 8) + parseInt(color[2])).toString(16).slice(1);
+                        
+                        // Draw colored circle
+                        doc.setFillColor(hex);
+                        doc.circle(pageWidth * 0.65, yPos - 4, 4, 'F');
+                        
+                        // Add label and percentage
+                        doc.setTextColor(hex);
+                        doc.text(`${label}: ${percentages[index]}%`, pageWidth * 0.67, yPos);
+                        yPos += 25;
+                    });
+
+                    // Save the PDF
+                    const formattedDate = new Date().toISOString().slice(0, 10);
+                    doc.save(`Incident_Distribution_${selectedChartType}_${formattedDate}.pdf`);
+
+                } catch (error) {
+                    console.error('Error generating PDF:', error);
+                    alert('Error generating PDF. Please try again.');
+                } finally {
+                    // Restore download button
+                    const downloadBtn = document.getElementById('downloadCharts');
+                    downloadBtn.disabled = false;
+                    downloadBtn.innerHTML = '<span>📥 Download Chart</span>';
+                }
+            }
+
+            // Add click event listener for download button
+            document.getElementById('downloadCharts').addEventListener('click', generatePDF);
         });
     </script>
 </body>
