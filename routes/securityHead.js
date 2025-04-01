@@ -297,7 +297,7 @@
             // Ensure reports directory exists
             fs.mkdirSync(path.dirname(reportPath), { recursive: true });
     
-            // Define watermark path (adjust this to your actual watermark image path)
+            // Define watermark path
             const watermarkPath = path.join(__dirname, '../public/images/wm.png');
             
             // Define logo path
@@ -486,45 +486,114 @@
                 doc.moveDown(1);
             };
     
+            // Function to add incident image if available - Modified to use KPI-Project\uploads
+            const addIncidentImage = (imagePath) => {
+                if (!imagePath) return;
+                
+                try {
+                    // Construct the full path using the KPI-Project/uploads folder
+                    const fullImagePath = path.join(__dirname, '../../KPI-Project/uploads', imagePath);
+                    
+                    if (fs.existsSync(fullImagePath)) {
+                        if (doc.y > contentEndY - 150) doc.addPage();
+                        
+                        addSectionHeading('Incident Image');
+                        
+                        const maxWidth = doc.page.width - 80;
+                        const maxHeight = 200;
+                        
+                        doc.image(fullImagePath, 40, doc.y, {
+                            fit: [maxWidth, maxHeight],
+                            align: 'center',
+                            valign: 'center'
+                        });
+                        
+                        doc.moveDown(2);
+                    } else {
+                        console.log(`Image not found at path: ${fullImagePath}`);
+                    }
+                } catch (err) {
+                    console.error("Image error:", err);
+                    // Continue without image if error occurs
+                }
+            };
+    
             // Add title with absolute positioning
             const y = doc.y;
             doc.font('Helvetica-Bold').fontSize(18).fillColor(colors.primary)
                .text('Comprehensive Incident Report', 40, y);
             doc.moveDown(1);
     
-            // Sections
-            const sections = [
-                { title: '1. Basic Incident Details', data: { 'Incident UID': report.uid, 'Date': report.date, 'Location': report.location, 'Incident Type': report.type_of_incident, 'Description': report.description } },
-                { title: '2. Medical & Alert Information', data: { 'Alerted By': report.alerted_by, 'Alert Time': report.alert_time, 'Medical Support': report.medical_support, 'Doctor': report.name_of_doctor, 'Ambulance Service': report.ambulance_service } },
-                { title: '3. Legal & Police Information', data: { 'Police Notified': report.police_notification, 'Legal Action': report.legal_action, 'Reporting Time': report.reporting_time } }
-            ];
-            sections.forEach(section => createFullTable(doc, section.title, section.data));
+            // Basic incident details - added more fields
+            createFullTable(doc, '1. Basic Incident Details', { 
+                'Incident UID': report.uid, 
+                'Date': report.date, 
+                'Incident Time': report.incident_time, 
+                'Location': report.location, 
+                'Description of Location': report.location_description,
+                'Incident Type': report.type_of_incident, 
+                'Description': report.description,
+                'No. of Injured': report.no_of_injured,
+                'Injured Person Category': report.injured_person_category,
+                'Type of Casualty': report.type_of_casualty
+            });
     
-            // Chronological Events
+            // Medical & Alert Information - added nurse field
+            createFullTable(doc, '2. Medical & Alert Information', { 
+                'Alert Received By': report.alert_received_by,
+                'Alerted By': report.alerted_by, 
+                'Alert Time': report.alert_time, 
+                'Medical Support': report.medical_support, 
+                'Doctor': report.name_of_doctor,
+                'Nurse': report.name_of_nurse,
+                'Ambulance Service': report.ambulance_service 
+            });
+    
+            // Legal & Police Information - expanded
+            createFullTable(doc, '3. Legal & Police Information', { 
+                'Police Notified': report.police_notification, 
+                'Police Station': report.police_station,
+                'Reporting Time': report.reporting_time,
+                'Legal Action': report.legal_action,
+                'Legal Details': report.legal_details
+            });
+    
+            // Chronological Events - added Action column
             const events = parseJSONSafely(report.chronological_events);
             if (events.length > 0) {
-                addItemList('4. Chronological Events', events, event => `Time: ${event.time}, Description: ${event.description}`);
+                addItemList('4. Chronological Events', events, event => `Time: ${event.time}, Description: ${event.description}, Action: ${event.action || 'N/A'}`);
             }
     
-            // Witnesses
+            // Witnesses - added Organization column
             const witnesses = parseJSONSafely(report.witnesses);
             if (witnesses.length > 0) {
-                addItemList('5. Witnesses', witnesses, witness => `Name: ${witness.name}, Contact: ${witness.contact}`);
+                addItemList('5. Witnesses', witnesses, witness => 
+                    `Name: ${witness.name}, Organization: ${witness.organization || 'N/A'}, Contact: ${witness.contact}, Action: ${witness.action || 'N/A'}`
+                );
             }
     
-            // Additional Details
+            // Additional Details - added Status field
             createFullTable(doc, '6. Additional Details', {
                 'Damage Details': report.damage_details,
                 'Contributing Factors': report.contributing_factors,
                 'Recommendations': report.recommendations,
-                'Follow-up Actions': report.follow_up_actions
+                'Status of the Incident': report.status,
+                'Follow-up Actions': report.follow_up_actions,
+                'Additional Comments': report.additional_comments
             });
     
             // Submission Details
             createFullTable(doc, '7. Report Submission', {
                 'Submitted By': report.submitted_by,
-                'Created At': report.created_at
+                'Designation': report.designation,
             });
+    
+            // Add incident image at the end of the PDF if available
+            if (report.image_path) {
+                // Force a new page for the image at the end
+                doc.addPage();
+                addIncidentImage(report.image_path);
+            }
     
             // Optimized Footer without UID and page numbers
             const addFooter = () => {

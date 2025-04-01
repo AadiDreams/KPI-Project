@@ -29,19 +29,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log(`UID generated successfully: ${data.uid}`);
                     } else {
                         console.error('Error fetching UID:', data.error);
-                        // Set a fallback UID with current date
-                        const date = new Date();
-                        const deptCode = departmentID.split('_')[1] || 'XX';
-                        uidField.value = `IR/${deptCode}/001/${date.getFullYear()}`;
+                        generateFallbackUID(departmentID, uidField);
                     }
                 })
                 .catch(error => {
                     console.error('Network error when fetching UID:', error);
-                    // Set a fallback UID with current date if fetch fails
-                    const date = new Date();
-                    const deptCode = departmentID.split('_')[1] || 'XX';
-                    uidField.value = `IR/${deptCode}/001/${date.getFullYear()}`;
+                    generateFallbackUID(departmentID, uidField);
                 });
         }
     }
 });
+
+// Function to generate a fallback UID if server request fails
+function generateFallbackUID(departmentID, uidField) {
+    const date = new Date();
+    const deptCode = departmentID.split('_')[1] || 'XX';
+    uidField.value = `IR/${deptCode}/001/${date.getFullYear()}`;
+}
