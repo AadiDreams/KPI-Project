@@ -776,71 +776,71 @@ router.get('/notifications/:uid/pdf', isAuthenticated, async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 });
+
+
 async function generateNextUID(departmentID) {
     try {
-        // Extract department code from the department ID (e.g., "DM_IT")
+        // Extract department code from the department ID
         const deptCode = departmentID.split('_')[1];
         
         // Get current year
         const currentYear = new Date().getFullYear();
         
-        // Find the highest sequence number for this department (across all years)
-        // This ensures sequential numbering regardless of the year
-        const [rows] = await pool.query(
-            'SELECT MAX(SUBSTRING_INDEX(SUBSTRING_INDEX(uid, "/", 3), "/", -1)) as max_seq ' +
-            'FROM incidents ' +
-            'WHERE uid LIKE ?',
-            [`IR/${deptCode}/%`]  // Removed the year filter to get the highest sequence across all years
+        console.log(`Generating UID for department: ${departmentID}, code: ${deptCode}`);
+        
+        // Get count from database with proper result handling
+        const [result] = await pool.query(
+            'SELECT COUNT(*) as count FROM incidents WHERE uid LIKE ?',
+            [`IR/${deptCode}/%`]
         );
         
-        console.log("Query result for UID generation:", JSON.stringify(rows));
+        // Log raw database response
+        console.log('Database Response:', result);
         
-        // Initialize nextSeq to 1 (default for first entry)
-        let nextSeq = 1;
-        
-        // Check if result is valid and has the max_seq property
-        if (rows && rows.length > 0 && rows[0].max_seq !== null && rows[0].max_seq !== undefined) {
-            const parsedSeq = parseInt(rows[0].max_seq);
-            if (!isNaN(parsedSeq)) {
-                nextSeq = parsedSeq + 1;
-            }
+        // Safely handle BigInt value
+        let currentCount;
+        if (result && result.count !== undefined) {
+            // Convert BigInt to Number
+            currentCount = Number(result.count);
+        } else if (result && result[0] && result[0].count !== undefined) {
+            // Handle array result format
+            currentCount = Number(result[0].count);
+        } else {
+            // Default to 0 if no valid count found
+            currentCount = 0;
         }
         
-        // Format the sequence number with leading zeros (e.g., 001, 023, 156)
+        const nextSeq = currentCount + 1;
+        
+        console.log('Count Details:');
+        console.log(`Raw count from DB: ${currentCount}`);
+        console.log(`Next sequence number: ${nextSeq}`);
+        
+        // Format with leading zeros
         const formattedSeq = nextSeq.toString().padStart(3, '0');
         
         // Create the complete UID
         const uid = `IR/${deptCode}/${formattedSeq}/${currentYear}`;
         
-        console.log(`Generated UID: ${uid}, Department: ${deptCode}, Next sequence: ${nextSeq}`);
+        console.log(`Generated UID: ${uid}`);
         
         return uid;
     } catch (error) {
         console.error("Error generating UID:", error);
-        // Return a fallback UID if there's an error
         const deptCode = departmentID.split('_')[1] || 'XX';
         const currentYear = new Date().getFullYear();
         return `IR/${deptCode}/001/${currentYear}`;
     }
 }
 
-// The route handler looks good, no changes needed:
-// router.get('/:departmentID/next-uid', isAuthenticated, async (req, res) => {
-//     try {
-//         const departmentID = req.session.user.departmentID;
-//         const nextUID = await generateNextUID(departmentID);
-//         
-//         res.json({ success: true, uid: nextUID });
-//     } catch (error) {
-//         console.error("Error fetching next UID:", error);
-//         res.status(500).json({ success: false, error: "Internal Server Error" });
-//     }
-// });
 
-// Add this route to get the next UID for a department
+// Route handler to get the next UID for a department
 router.get('/:departmentID/next-uid', isAuthenticated, async (req, res) => {
     try {
-        const departmentID = req.session.user.departmentID;
+        // Use the parameter from URL, not from session
+        const departmentID = req.params.departmentID;
+        console.log(`Received UID request for department: ${departmentID}`);
+        
         const nextUID = await generateNextUID(departmentID);
         
         res.json({ success: true, uid: nextUID });
@@ -849,7 +849,6 @@ router.get('/:departmentID/next-uid', isAuthenticated, async (req, res) => {
         res.status(500).json({ success: false, error: "Internal Server Error" });
     }
 });
-
 
 // Department Logout Route
 router.post('/logout', (req, res) => {
