@@ -199,6 +199,25 @@ app.post("/delete-incident/:id", async (req, res) => {
 });
 
 
+//update incident details
+app.post('/update-incident', async (req, res) => {
+    const { incident_name, threshold_value, details } = req.body;
+
+    if (!incident_name || !threshold_value || !details) {
+        return res.status(400).json({ message: "Invalid data provided" });
+    }
+
+    try {
+        const sql = "UPDATE add_incidents SET thresholdValue = ?, details = ? WHERE incidentName = ?";
+        await pool.query(sql, [threshold_value, details, incident_name]);
+        res.json({ message: "Incident updated successfully!" });
+    } catch (error) {
+        console.error("Database error:", error);
+        res.status(500).json({ message: "Database error occurred" });
+    }
+});
+
+
 // load dropdown list dynamiclly for type of incidents
 
 app.get("/type_incidents", async (req, res) => {
