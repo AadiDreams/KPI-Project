@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/incident-report.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script defer src="/assets/js/incident-report.js" ></script>
+    <script defer src="/assets/js/uid-generator.js"></script>
    
 </head>
 <body>
@@ -15,7 +16,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
-                <h1>Airport</h1>
+                <img src="hh.png" alt="Airport Logo">
             </div>
             <nav class="menu">
                 <a href="/department/<%=departmentID %>/home" class="menu-item <%= typeof active!==undefined && active === 'home' ? 'active' : '' %>" data-content="home"><span class="icon">🏠</span> Home</a>
@@ -52,8 +53,8 @@
                         <label for="date">Date(DD:MM:YYYY):</label>
                         <input type="date" id="date" name="date" required><br><br>
             
-                        <label for="uid">UID Number:</label>
-                        <input type="text" name="uid" id="uid" required><br><br>
+                        <label for="uid">UID Number (Auto-generated):</label>
+                        <input type="text" name="uid" id="uid" readonly>
             
                         <label for="incident-time">Incident Time(24 Hrs):</label>
                         <input type="time" id="incident-time" name="incident-time" required><br><br>
@@ -198,5 +199,80 @@
         </div>
     </main>
 </div>
+<script>
+
+
+  async function generateNextUID(departmentID) {
+    try {
+        // Extract department code from the department ID
+        const deptCode = departmentID.split('_')[1];
+        
+        // Get current year
+        const currentYear = new Date().getFullYear();
+        
+        // Get all UIDs for this department and sort them
+        const [rows] = await pool.query(
+            'SELECT uid FROM incidents WHERE uid LIKE ? ORDER BY uid DESC LIMIT 1',
+            [`IR/${deptCode}/%`]
+        );
+        
+        console.log("Latest UID query result:", JSON.stringify(rows));
+        
+        let nextSeq = 1;
+        
+        // If we found any UIDs
+        if (rows && rows.length > 0 && rows[0].uid) {
+            // Parse the UID format: IR/CE/004/2025
+            const parts = rows[0].uid.split('/');
+            
+            console.log("UID parts:", parts);
+            
+            if (parts.length >= 3) {
+                // Get the sequence number (3rd part)
+                const seqPart = parts[2];
+                console.log("Sequence part:", seqPart);
+                
+                // Convert to integer and increment
+                const currentSeq = parseInt(seqPart, 10);
+                console.log("Parsed sequence number:", currentSeq);
+                
+                if (!isNaN(currentSeq)) {
+                    nextSeq = currentSeq + 1;
+                    console.log("Incremented sequence:", nextSeq);
+                }
+            }
+        }
+        
+        // Format with leading zeros
+        const formattedSeq = nextSeq.toString().padStart(3, '0');
+        
+        // Create complete UID
+        const uid = `IR/${deptCode}/${formattedSeq}/${currentYear}`;
+        
+        console.log(`Generated UID: ${uid}, Department: ${deptCode}, Next sequence: ${nextSeq}`);
+        
+        return uid;
+    } catch (error) {
+        console.error("Error generating UID:", error);
+        const deptCode = departmentID.split('_')[1] || 'XX';
+        const currentYear = new Date().getFullYear();
+        return `IR/${deptCode}/001/${currentYear}`;
+    }
+}
+    // Add this route to get the next UID for a department
+    router.get('/:departmentID/next-uid', isAuthenticated, async (req, res) => {
+        try {
+            const departmentID = req.session.user.departmentID;
+            const nextUID = await generateNextUID(departmentID);
+            
+            res.json({ success: true, uid: nextUID });
+        } catch (error) {
+            console.error("Error fetching next UID:", error);
+            res.status(500).json({ success: false, error: "Internal Server Error" });
+        }
+    });
+    
+
+</script>
 </body>
 </html>
