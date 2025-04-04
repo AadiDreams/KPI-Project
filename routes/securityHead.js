@@ -276,158 +276,363 @@
         }
     });
     
+
     router.get('/incident/:uid/pdf', authenticateSecurityHead, async (req, res) => {
         const uid = decodeURIComponent(req.params.uid);
-        console.log("Requested UID:", uid);
     
         try {
+            // Validate UID
+            if (!uid) return res.status(400).send('Invalid UID');
+    
+            // Fetch incident data
             const rows = await pool.query("SELECT * FROM incidents WHERE uid = ?", [uid]);
-            if (!rows || rows.length === 0) {
-                console.log("Incident not found in database.");
-                return res.status(404).send('Incident not found.');
-            }
+            if (!rows || rows.length === 0) return res.status(404).send('Incident not found.');
     
             const report = rows[0];
-            console.log("Report Data:", report);
     
-            const safeUid = uid.replace(/\//g, "_");
-            const reportPath = path.join(__dirname, '../public/reports/',`incident-${safeUid}.pdf`);
+            // Generate safe filename
+            const safeUid = uid.replace(/[^a-zA-Z0-9-_]/g, '_');
+            const reportPath = path.join(__dirname, '../public/reports', `incident-${safeUid}.pdf`);
+    
+            // Ensure reports directory exists
             fs.mkdirSync(path.dirname(reportPath), { recursive: true });
     
-            const doc = new PDFDocument({ margin: 50, size: 'A4' });
-            const writeStream = fs.createWriteStream(reportPath);
+            // Define watermark path
+            const watermarkPath = path.join(__dirname, '../public/images/wm.png');
+            
+            // Define logo path
+            const logoPath = path.join(__dirname, '../public/images/logo.png');
     
-            writeStream.on('error', (err) => {
-                console.error("File writing error:", err);
-                return res.status(500).send("Error writing the PDF file.");
+            // Create PDF document
+            const doc = new PDFDocument({
+                margins: { top: 80, bottom: 70, left: 40, right: 40 },
+                size: 'A4',
+                bufferPages: true 
             });
+    
+            // Store page references to add watermark at the end
+            const pageRefs = [];
+    
+            // Try to register Nunito Sans font with error handling
+            try {
+                const fontPath = path.join(__dirname, '../public/fonts/NunitoSans-BoldItalic.ttf');
+                // Check if font file exists before registering
+                if (fs.existsSync(fontPath)) {
+                    doc.registerFont('NunitoSans-BoldItalic', fontPath);
+                } else {
+                    console.log("Font file not found, will use fallback font");
+                }
+            } catch (err) {
+                console.log("Error registering font:", err);
+                // Continue without the custom font
+            }
+    
+            const writeStream = fs.createWriteStream(reportPath);
+            writeStream.on('error', err => res.status(500).send("Error writing the PDF file."));
     
             res.setHeader('Content-Disposition', `attachment; filename="incident-${safeUid}.pdf"`);
             res.setHeader('Content-Type', 'application/pdf');
     
             doc.pipe(writeStream);
     
-            // 🎨 Updated Theme Colors
+            // Color Theme
             const colors = {
-                primary: '#b30000',
-                secondary: '#ff6666',
-                text: '#333333',
-                border: '#CCCCCC'
+                primary: '#ff4444',
+                secondary: '#159895',
+                background: '#F8F9FA',
+                text: '#212529'
             };
     
-            // 🛠 Helper Functions
-            const formatDateTime = (dateTimeStr) => {
-                if (!dateTimeStr) return "N/A";
+            // Utility functions
+            const formatValue = value => value ? String(value).trim() : 'N/A';
+            const parseJSONSafely = json => {
                 try {
-                    return new Date(dateTimeStr).toLocaleString('en-US', {
-                        year: 'numeric', month: '2-digit', day: '2-digit',
-                        hour: '2-digit', minute: '2-digit', hour12: true
-                    });
+                    return typeof json === 'string' ? JSON.parse(json) : json || [];
                 } catch {
-                    return dateTimeStr;
-                }
-            };
-    
-            const isEmpty = (value) => value === null || value === undefined || value === '';
-    
-            const parseJSONSafely = (data) => {
-                try {
-                    return typeof data === "string" ? JSON.parse(data) : data || [];
-                } catch (error) {
-                    console.error("JSON Parse Error:", error);
                     return [];
                 }
             };
     
-            const addSectionTitle = (text) => {
-                doc.fillColor(colors.primary).font("Helvetica-Bold").fontSize(14).text(text).moveDown(0.3);
-                doc.moveTo(50, doc.y).lineTo(doc.page.width - 50, doc.y).strokeColor(colors.secondary).stroke();
-                doc.moveDown(0.5);
-            };
+            const pageHeight = doc.page.height;
+            const footerHeight = 60; 
+            const contentEndY = pageHeight - footerHeight;
     
-            const addSectionContent = (labels, values) => {
-                labels.forEach((label, index) => {
-                    if (!isEmpty(values[index])) {
-                        doc.font("Helvetica-Bold").text(`${label}: `, { continued: true }).font("Helvetica").text(values[index]);
+            // Modified watermark function - to be applied after all content is added
+            const addWatermarkToPage = (pageRef) => {
+                doc.switchToPage(pageRef);
+                doc.save();
+                
+                try {
+                    // Check if watermark file exists
+                    if (fs.existsSync(watermarkPath)) {
+                        // Define exact dimensions for watermark
+                        const watermarkWidth = 180; // Width in points (72 points = 1 inch)
+                        const watermarkHeight = 180; // Height in points
+                        
+                        // Calculate center position
+                        const centerX = (doc.page.width - watermarkWidth) / 2;
+                        const centerY = (doc.page.height - watermarkHeight) / 2;
+                        
+                        // Add the watermark with opacity and centered
+                        doc.opacity(0.15) // Set opacity for watermark
+                           .image(watermarkPath, centerX, centerY, {
+                                width: watermarkWidth,
+                                height: watermarkHeight
+                            });
                     }
-                });
-                doc.moveDown(0.5);
+                } catch (err) {
+                    console.error("Watermark error:", err);
+                    // Continue without watermark if error occurs
+                }
+                
+                doc.restore();
             };
     
-            // 🏷 Report Header
-            doc.font("Helvetica-Bold").fontSize(22).fillColor(colors.primary).text("INCIDENT REPORT", { align: "center" }).moveDown(1);
+            // Header function with logo and font fallback
+            const addHeader = () => {
+                const currentY = doc.y;
+                doc.y = 20;
+                
+                // Add line
+                doc.lineWidth(3).moveTo(40, 40).lineTo(doc.page.width - 40, 40).stroke(colors.primary);
+                
+                // Try to use Nunito Sans with fallback to Helvetica-BoldOblique if not available
+                try {
+                    doc.fontSize(12).fillColor(colors.text).font('NunitoSans-BoldItalic').text('Kannur International Airport', 40, 20);
+                } catch (err) {
+                    // Fallback to a standard font that's always available in PDFKit
+                    doc.fontSize(12).fillColor(colors.text).font('Helvetica-BoldOblique').text('Kannur International Airport', 40, 20);
+                }
+                
+                try {
+                    // Check if logo file exists
+                    if (fs.existsSync(logoPath)) {
+                        // Add logo on right side with specific dimensions
+                        const logoWidth = 80; // Width in points (72 points = 1 inch)
+                        const logoHeight = 25; // Height in points
+                        const logoX = doc.page.width - 40 - logoWidth; // Position from right edge
+                        const logoY = 8; // Vertical position to center with text
+                        
+                        doc.image(logoPath, logoX, logoY, {
+                            width: logoWidth,
+                            height: logoHeight
+                        });
+                    }
+                } catch (err) {
+                    console.error("Logo error:", err);
+                    // Continue without logo if error occurs
+                }
+                
+                doc.y = currentY > 60 ? currentY : 60;
+            };
     
-            // 🔹 Incident Details
-            addSectionTitle("1. Basic Incident Details");
-            addSectionContent(["UID", "Date", "Incident Time", "Location", "Type of Incident", "Description"], [
-                report.uid, formatDateTime(report.date), report.incident_time, report.location, report.type_of_incident, report.description
-            ]);
+            // Track pages for watermark
+            pageRefs.push(doc.bufferedPageRange().start);
     
-            // 🚑 Medical & Alert Information
-            addSectionTitle("2. Medical & Alert Information");
-            addSectionContent(["Alert Received By", "Alerted By", "Alert Time", "Medical Support", "Doctor", "Nurse", "Ambulance Service"], [
-                report.alert_received_by, report.alerted_by, report.alert_time, report.medical_support, report.name_of_doctor, report.name_of_nurse, report.ambulance_service
-            ]);
+            // On new page, add header and track page reference
+            doc.on('pageAdded', () => {
+                addHeader();
+                pageRefs.push(doc.bufferedPageRange().count - 1);
+            });
     
-            // 🚔 Legal & Police Information
-            addSectionTitle("3. Legal & Police Information");
-            addSectionContent(["Police Notified", "Police Station", "Legal Action", "Reporting Time"], [
-                report.police_notification, report.police_station, report.legal_action, report.reporting_time
-            ]);
+            // Add header to first page
+            addHeader();
+            
+            // Function to add consistently positioned heading
+            const addSectionHeading = (text) => {
+                const y = doc.y;
+                doc.fontSize(14).fillColor(colors.primary).font('Helvetica-Bold').text(text, 40, y);
+                doc.moveDown(0.5);
+            };
+            
+            // Table function with consistent heading positioning
+            const createFullTable = (doc, title, data) => {
+                if (doc.y > contentEndY - 100) doc.addPage();
+                
+                // Use absolute positioning for the heading
+                addSectionHeading(title);
+                
+                const startX = 40, pageWidth = doc.page.width - 80, rowHeight = 20;
+                const colWidths = [pageWidth * 0.4, pageWidth * 0.6];
+                let startY = doc.y;
     
-            // 🕒 Chronological Events
+                Object.entries(data).forEach(([key, value], index) => {
+                    if (startY + rowHeight > contentEndY - 20) {
+                        doc.addPage();
+                        startY = doc.y;
+                    }
+                    doc.fillColor(index % 2 === 0 ? '#FFFFFF' : colors.background)
+                       .rect(startX, startY, pageWidth, rowHeight).fill();
+                    doc.fillColor(colors.text).font('Helvetica-Bold').fontSize(10)
+                       .text(formatValue(key), startX + 5, startY + 5, { width: colWidths[0] });
+                    doc.font('Helvetica').fontSize(10)
+                       .text(formatValue(value), startX + colWidths[0], startY + 5, { width: colWidths[1] });
+                    startY += rowHeight;
+                });
+                doc.y = startY + 10;
+            };
+    
+            // List function with pagination and consistent heading positioning
+            const addItemList = (title, items, formatter) => {
+                if (doc.y > contentEndY - 100) doc.addPage();
+                
+                // Use absolute positioning for the heading
+                addSectionHeading(title);
+                
+                items.forEach((item, index) => {
+                    if (doc.y > contentEndY - 50) doc.addPage();
+                    doc.font('Helvetica').fontSize(10).fillColor(colors.text).text(`${index + 1}. ${formatter(item)}`);
+                });
+                doc.moveDown(1);
+            };
+    
+            // Function to add incident image if available - Modified to use KPI-Project\uploads
+            const addIncidentImage = (imagePath) => {
+                if (!imagePath) return;
+                
+                try {
+                    // Construct the full path using the KPI-Project/uploads folder
+                    const fullImagePath = path.join(__dirname, '../../KPI-Project/uploads', imagePath);
+                    
+                    if (fs.existsSync(fullImagePath)) {
+                        if (doc.y > contentEndY - 150) doc.addPage();
+                        
+                        addSectionHeading('Incident Image');
+                        
+                        const maxWidth = doc.page.width - 80;
+                        const maxHeight = 200;
+                        
+                        doc.image(fullImagePath, 40, doc.y, {
+                            fit: [maxWidth, maxHeight],
+                            align: 'center',
+                            valign: 'center'
+                        });
+                        
+                        doc.moveDown(2);
+                    } else {
+                        console.log(`Image not found at path: ${fullImagePath}`);
+                    }
+                } catch (err) {
+                    console.error("Image error:", err);
+                    // Continue without image if error occurs
+                }
+            };
+    
+            // Add title with absolute positioning
+            const y = doc.y;
+            doc.font('Helvetica-Bold').fontSize(18).fillColor(colors.primary)
+               .text('Comprehensive Incident Report', 40, y);
+            doc.moveDown(1);
+    
+            // Basic incident details - added more fields
+            createFullTable(doc, '1. Basic Incident Details', { 
+                'Incident UID': report.uid, 
+                'Date': report.date, 
+                'Incident Time': report.incident_time, 
+                'Location': report.location, 
+                'Description of Location': report.location_description,
+                'Incident Type': report.type_of_incident, 
+                'Description': report.description,
+                'No. of Injured': report.no_of_injured,
+                'Injured Person Category': report.injured_person_category,
+                'Type of Casualty': report.type_of_casualty
+            });
+    
+            // Medical & Alert Information - added nurse field
+            createFullTable(doc, '2. Medical & Alert Information', { 
+                'Alert Received By': report.alert_received_by,
+                'Alerted By': report.alerted_by, 
+                'Alert Time': report.alert_time, 
+                'Medical Support': report.medical_support, 
+                'Doctor': report.name_of_doctor,
+                'Nurse': report.name_of_nurse,
+                'Ambulance Service': report.ambulance_service 
+            });
+    
+            // Legal & Police Information - expanded
+            createFullTable(doc, '3. Legal & Police Information', { 
+                'Police Notified': report.police_notification, 
+                'Police Station': report.police_station,
+                'Reporting Time': report.reporting_time,
+                'Legal Action': report.legal_action,
+                'Legal Details': report.legal_details
+            });
+    
+            // Chronological Events - added Action column
             const events = parseJSONSafely(report.chronological_events);
             if (events.length > 0) {
-                addSectionTitle("4. Chronological Events");
-                events.forEach((event, index) => {
-                    doc.text(`${index + 1}. Time: ${event.time}, Description: ${event.description}`);
-                });
-                doc.moveDown(1);
+                addItemList('4. Chronological Events', events, event => `Time: ${event.time}, Description: ${event.description}, Action: ${event.action || 'N/A'}`);
             }
     
-            // 👀 Witnesses
+            // Witnesses - added Organization column
             const witnesses = parseJSONSafely(report.witnesses);
             if (witnesses.length > 0) {
-                addSectionTitle("5. Witnesses");
-                witnesses.forEach((w, index) => {
-                    doc.text(`${index + 1}. Name: ${w.name}, Organization: ${w.organization}, Contact: ${w.contact}`);
-                });
-                doc.moveDown(1);
+                addItemList('5. Witnesses', witnesses, witness => 
+                    `Name: ${witness.name}, Organization: ${witness.organization || 'N/A'}, Contact: ${witness.contact}, Action: ${witness.action || 'N/A'}`
+                );
             }
     
-            // 🔍 Additional Details
-            addSectionTitle("6. Additional Details");
-            addSectionContent(["Incident Details", "Damage Details", "Contributing Factors", "Contributing Factors Details", "Recommendations", "Follow-up Actions", "Comments"], [
-                report.incident_details, report.damage_details, report.contributing_factors, report.contributing_factors_details, report.recommendations, report.follow_up_actions, report.comments
-            ]);
+            // Additional Details - added Status field
+            createFullTable(doc, '6. Additional Details', {
+                'Damage Details': report.damage_details,
+                'Contributing Factors': report.contributing_factors,
+                'Recommendations': report.recommendations,
+                'Status of the Incident': report.status,
+                'Follow-up Actions': report.follow_up_actions,
+                'Additional Comments': report.additional_comments
+            });
     
-            // 📜 Report Submission
-            addSectionTitle("7. Report Submission");
-            addSectionContent(["Submitted By", "Designation", "Created At"], [
-                report.submitted_by, report.designation, formatDateTime(report.created_at)
-            ]);
+            // Submission Details
+            createFullTable(doc, '7. Report Submission', {
+                'Submitted By': report.submitted_by,
+                'Designation': report.designation,
+            });
     
-            // 📌 Footer
-            doc.fillColor(colors.text).font("Helvetica-Oblique").fontSize(9)
-                .text(`Generated on: ${new Date().toLocaleString()}`, 50, doc.page.height - 50, { align: "left" })
-                .text("This report is confidential and intended for authorized personnel only.", doc.page.width / 2, doc.page.height - 50, { align: "center" })
-                .text(`Page 1 of 1`, doc.page.width - 50, doc.page.height - 50, { align: "right" });
+            // Add incident image at the end of the PDF if available
+            if (report.image_path) {
+                // Force a new page for the image at the end
+                doc.addPage();
+                addIncidentImage(report.image_path);
+            }
     
-            // ✅ Finalize PDF
+            // Optimized Footer without UID and page numbers
+            const addFooter = () => {
+                const totalPageCount = doc.bufferedPageRange().count;
+                for (let i = 0; i < totalPageCount; i++) {
+                    doc.switchToPage(i);
+                    const bottomPosition = doc.page.height - 40;
+                    doc.lineWidth(2).moveTo(40, bottomPosition - 10).lineTo(doc.page.width - 40, bottomPosition - 10).stroke(colors.primary);
+                    
+                    // No UID or page numbers - just the line
+                }
+            };
+    
+            // Add footers first
+            addFooter();
+            
+            // Now add watermarks on top of everything
+            pageRefs.forEach(pageRef => {
+                addWatermarkToPage(pageRef);
+            });
+    
             doc.end();
+    
             writeStream.on("finish", () => {
                 res.download(reportPath, (err) => {
-                    if (err) console.error("Error sending file:", err);
+                    if (err) console.error("Download error:", err);
+                    // Delete the file after download
                     setTimeout(() => fs.unlink(reportPath, (unlinkErr) => {
-                        if (unlinkErr) console.error("Error deleting file:", unlinkErr);
+                        if (unlinkErr) console.error("File deletion error:", unlinkErr);
                     }), 2000);
                 });
             });
-    
         } catch (error) {
-            console.error("Error generating PDF:", error);
-            res.status(500).send("Server Error");
+            console.error("PDF Generation Error:", error);
+            res.status(500).send("Internal Server Error");
         }
     });
+<<<<<<< HEAD
     
+=======
+>>>>>>> 687b4c9e96753f72a565896b5ef68ecee1084711
 module.exports = router;
