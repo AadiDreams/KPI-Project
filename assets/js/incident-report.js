@@ -116,3 +116,64 @@ $(document).ready(function() {
 
 // Refresh dropdown every 5 seconds to get newly added incidents
 // setInterval(loadIncidentTypes, 5000);
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('form[action="/submit-incident"]');
+
+    if (!form) {
+        console.error("Form not found");
+        return;
+    }
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/submit-incident', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const message = await response.text();
+                showModal(`✅ ${message}`);
+
+                // Add an event listener to the modal's OK button to refresh the form on success
+                const modalOkButton = document.querySelector("#modal-dialog button");
+                modalOkButton.addEventListener('click', () => {
+                    form.reset(); // Reset all form fields
+                    
+                    // Reset dynamic tables (Events and Witnesses)
+                    const eventsTable = document.getElementById("Events-table");
+                    const witnessTable = document.getElementById("witness-table");
+
+                    // Keep only the first row in each table
+                    while (eventsTable.rows.length > 1) {
+                        eventsTable.deleteRow(-1);
+                    }
+
+                    while (witnessTable.rows.length > 1) {
+                        witnessTable.deleteRow(-1);
+                    }
+
+                    // Reload incident types dropdown
+                    loadIncidentTypes();
+                });
+            } else {
+                const errorMsg = await response.text();
+                showModal(`❌ Error: ${errorMsg}`);
+            }
+        } catch (error) {
+            showModal(`❌ Server Error: ${error.message}`);
+        }
+    });
+});
+
+// Rest of the existing code for adding events, witnesses, etc.
+// ... (keep the existing addEventRow, removeEventRow, etc. functions)
+// Existing code remains the same...
+

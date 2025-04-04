@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
-// const pool = require('../db'); 
 const pool = require('../msqldb'); 
 
-// const mysql = require('mysql2/promise');
 
 require('dotenv').config();
 
@@ -16,31 +14,6 @@ const authenticateSecurityHead = (req, res, next) => {
     next();
 };
 
-// // Create pool connection with authentication fix
-// const pool = mysql.createPool({
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     password: process.env.DB_PASSWORD,
-//     database: process.env.DB_NAME,
-//     waitForConnections: true,
-//     connectionLimit: 10,
-//     queueLimit: 0,
-//     // Add these authentication options
-//     ssl: false,
-//     authPlugins: {
-//         mysql_native_password: () => () => Buffer.from(process.env.DB_PASSWORD + '\0')
-//     }
-// });
-
-// // Add connection test
-// pool.getConnection()
-//     .then(connection => {
-//         console.log('✅ Database connection established successfully');
-//         connection.release();
-//     })
-//     .catch(err => {
-//         console.error('❌ Error connecting to database:', err);
-//     });
 
 // 1. Incident Types Route
 router.get('/incident-types', authenticateSecurityHead, async (req, res) => {
@@ -336,81 +309,6 @@ router.get('/visualization/monthly', authenticateSecurityHead, async (req, res) 
         res.status(500).json({ error: 'Internal server error' });
     }
 });
-// router.get('/thresholds', async (req, res) => {
-//     try {
-//         // Queries to get incident counts and thresholds
-//         const incidentCountQuery = `
-//             SELECT 
-//                 type_of_incident, 
-//                 COUNT(*) as currentCount 
-//             FROM incidents 
-//             WHERE type_of_incident IS NOT NULL 
-//             GROUP BY type_of_incident
-//         `;
-
-//         const thresholdQuery = `
-//             SELECT 
-//                 incidentName,
-//                 thresholdValue 
-//             FROM add_incidents 
-//             WHERE incidentName IS NOT NULL
-//         `;
-
-//         // Execute queries and properly extract results
-//         const [incidentResult] = await pool.query(incidentCountQuery) || [];
-//         const [thresholdResult] = await pool.query(thresholdQuery) || [];
-
-//         // Ensure the results are arrays
-//         const incidentRows = Array.isArray(incidentResult) ? incidentResult : [incidentResult];
-//         const thresholdRows = Array.isArray(thresholdResult) ? thresholdResult : [thresholdResult];
-
-//         console.log('Raw incident data:', JSON.stringify(incidentRows, (_, v) => 
-//             typeof v === 'bigint' ? Number(v) : v, 2));
-
-//         console.log('Raw threshold data:', JSON.stringify(thresholdRows, (_, v) => 
-//             typeof v === 'bigint' ? Number(v) : v, 2));
-
-//         // Convert results to arrays
-//         const incidentCounts = incidentRows.map(row => ({
-//             incidentName: row.type_of_incident,
-//             currentCount: Number(row.currentCount) || 0
-//         }));
-
-//         const thresholds = thresholdRows.map(row => ({
-//             incidentName: row.incidentName,
-//             thresholdValue: Number(row.thresholdValue) || 100
-//         }));
-
-//         // Process the data
-//         const thresholdData = incidentCounts.map(incident => ({
-//             incidentName: incident.type_of_incident,
-//             currentCount: incident.currentCount,
-//             thresholdValue: thresholds.find(t => t.incidentName === incident.type_of_incident)?.thresholdValue || 100
-//         }));
-
-//         // Add missing thresholds
-//         thresholds.forEach(threshold => {
-//             if (!thresholdData.some(item => item.incidentName === threshold.incidentName)) {
-//                 thresholdData.push({
-//                     incidentName: threshold.incidentName,
-//                     currentCount: 0,
-//                     thresholdValue: threshold.thresholdValue
-//                 });
-//             }
-//         });
-
-//         console.log('Final processed data:', JSON.stringify(thresholdData, null, 2));
-
-//         res.json(thresholdData);
-
-//     } catch (error) {
-//         console.error('Error fetching threshold data:', error);
-//         res.status(500).json({ 
-//             error: 'Internal server error',
-//             details: error.message
-//         });
-//     }
-// });
 
 
 // Main visualization page route

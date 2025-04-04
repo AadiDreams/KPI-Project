@@ -35,12 +35,15 @@ router.get('/home', isITAdmin, async (req, res) => {
             }
         }
 
+        const [activeUsers] = await pool.query('SELECT count(*) as count FROM sessions')
+        const [departmentsMonitored] = await pool.query('SELECT count(*) as count FROM departments')
+
         res.render('it-home', {
             adminName,
             profileIcon,
-            departmentsMonitored: 5,
+            departmentsMonitored: departmentsMonitored.count,
             systemHealth: "Good",
-            activeUsers: 20,
+            activeUsers: activeUsers.count ,
             active: 'home'
         });
     } catch (err) {

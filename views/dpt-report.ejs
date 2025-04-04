@@ -8,9 +8,89 @@
     <link rel="stylesheet" href="/css/incident-report.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script defer src="/assets/js/incident-report.js" ></script>
-   
+   <style>
+    fieldset {
+            border: none;
+            margin-bottom: 2rem;
+        }
+
+        legend {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        /* General styles for input, textarea, and select */
+input, textarea, select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    display: block;
+    border: 1px solid #b30000;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Focus effect */
+input:focus, textarea:focus, select:focus {
+    border-color: hsl(1, 88%, 30%);
+    box-shadow: 0px 0px 8px rgba(230, 17, 34, 0.616);
+    outline: none;
+}
+
+/* Style for input[type="file"] */
+input[type="file"] {
+    border: none;
+    padding: 5px;
+    font-size: 16px;
+}
+
+/* Style for the remove buttons */
+button.remove-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+button.remove-button:hover {
+    background-color: #c0392b;
+}
+
+/* Add buttons */
+button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+   </style>
 </head>
 <body>
+    <!-- Modal Dialog -->
+    <div id="modal-dialog" class="modal-overlay">
+        <div class="modal-content">
+            <span id="modal-message"></span>
+            <button onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -196,7 +276,23 @@
                     <button type="submit" id="submit">Submit</button>
                 </form>              
         </div>
-    </main>
+    </main>     
 </div>
+
+<script>
+    function showModal(message) {
+        const modal = document.getElementById("modal-dialog");
+        const msgSpan = document.getElementById("modal-message");
+
+        msgSpan.textContent = message;
+        modal.style.display = "flex";
+    }
+
+    function closeModal() {
+        const modal = document.getElementById("modal-dialog");
+        modal.style.display = "none";
+    }
+</script>
+
 </body>
 </html>
