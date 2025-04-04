@@ -321,17 +321,25 @@ router.get('/notifications/:uid/pdf', isAuthenticated, async (req, res) => {
         };
 
         // Utility functions
-        const formatValue = value => value ? String(value).trim() : 'N/A';
+        // Modified to use "-" instead of "N/A"
+        const formatValue = value => {
+            if (value === null || value === undefined || value === '') {
+                return '-';
+            }
+            return String(value).trim();
+        };
+        
         const parseJSONSafely = json => {
             try {
                 return typeof json === 'string' ? JSON.parse(json) : json || [];
-            } catch {
+            } catch (e) {
+                console.error("Error parsing JSON:", e);
                 return [];
             }
         };
         
         const formatDateTime = (dateTimeStr) => {
-            if (!dateTimeStr) return "N/A";
+            if (!dateTimeStr) return "-";
             try {
                 return new Date(dateTimeStr).toLocaleString('en-US', {
                     year: 'numeric', month: '2-digit', day: '2-digit',
@@ -509,69 +517,73 @@ router.get('/notifications/:uid/pdf', isAuthenticated, async (req, res) => {
             doc.y = startY + 5; // Reduced padding
         };
 
-        // Chronological incidents table with action column
+        // Chronological incidents table with action column removed
         const addChronologicalTable = (title, incidents) => {
             if (doc.y > contentEndY - 120) doc.addPage();
             
             addSectionHeading(title);
             
             const startX = 40, pageWidth = doc.page.width - 80, rowHeight = 25;
-            const colWidths = [pageWidth * 0.2, pageWidth * 0.4, pageWidth * 0.4]; // Time, Description, Action
+            const colWidths = [pageWidth * 0.2, pageWidth * 0.8]; // Time, Description (removed Action)
             
             let startY = doc.y;
             
             // Draw header row
             doc.fillColor(colors.primary).rect(startX, startY, pageWidth, rowHeight).fill();
             
-            // Add header text
+            // Add header text - removed Action column
             doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(10)
                .text('Time(24 Hrs)', startX + 5, startY + 5, { width: colWidths[0] - 5, align: 'center' })
-               .text('Description', startX + colWidths[0] + 5, startY + 5, { width: colWidths[1] - 5, align: 'center' })
-               .text('Action', startX + colWidths[0] + colWidths[1] + 5, startY + 5, { width: colWidths[2] - 5, align: 'center' });
+               .text('Description', startX + colWidths[0] + 5, startY + 5, { width: colWidths[1] - 5, align: 'center' });
             
             startY += rowHeight;
             
-            // Draw data rows
-            incidents.forEach((incident, index) => {
-                const action = incident.action || 'N/A'; // Handle case where action might not exist in data
-                
-                // Check if we need a new page for this row
-                if (startY + rowHeight > contentEndY - 20) {
-                    doc.addPage();
-                    startY = doc.y;
-                }
-                
-                // Calculate height needed for this row based on text content
-                const descriptionHeight = doc.heightOfString(formatValue(incident.description), { 
-                    width: colWidths[1] - 10, 
-                    fontSize: 10 
+            // Draw data rows - Improved handling for empty incidents
+            if (incidents && incidents.length > 0) {
+                incidents.forEach((incident, index) => {
+                    // Ensure we have values for all fields
+                    const time = incident.time || '-';
+                    const description = incident.description || '-';
+                    // Action column removed
+                    
+                    // Check if we need a new page for this row
+                    if (startY + rowHeight > contentEndY - 20) {
+                        doc.addPage();
+                        startY = doc.y;
+                    }
+                    
+                    // Calculate height needed for this row based on text content
+                    const descriptionHeight = doc.heightOfString(formatValue(description), { 
+                        width: colWidths[1] - 10, 
+                        fontSize: 10 
+                    });
+                    const rowContentHeight = Math.max(descriptionHeight, rowHeight - 10);
+                    const adjustedRowHeight = rowContentHeight + 10; // Add padding
+                    
+                    // Draw row background
+                    doc.fillColor(index % 2 === 0 ? '#FFFFFF' : colors.background)
+                       .rect(startX, startY, pageWidth, adjustedRowHeight).fill();
+                    
+                    // Add cell content with proper positioning - removed Action column
+                    doc.fillColor(colors.text).font('Helvetica').fontSize(10)
+                       .text(formatValue(time), startX + 5, startY + 5, { 
+                           width: colWidths[0] - 10,
+                           align: 'center'
+                       })
+                       .text(formatValue(description), startX + colWidths[0] + 5, startY + 5, { 
+                           width: colWidths[1] - 10
+                       });
+                    
+                    startY += adjustedRowHeight;
                 });
-                const actionHeight = doc.heightOfString(formatValue(action), { 
-                    width: colWidths[2] - 10, 
-                    fontSize: 10 
-                });
-                const rowContentHeight = Math.max(descriptionHeight, actionHeight, rowHeight - 10);
-                const adjustedRowHeight = rowContentHeight + 10; // Add padding
-                
-                // Draw row background
-                doc.fillColor(index % 2 === 0 ? '#FFFFFF' : colors.background)
-                   .rect(startX, startY, pageWidth, adjustedRowHeight).fill();
-                
-                // Add cell content with proper positioning
+            } else {
+                // Draw an empty row with dashes if no incidents - removed Action column
+                doc.fillColor('#FFFFFF').rect(startX, startY, pageWidth, rowHeight).fill();
                 doc.fillColor(colors.text).font('Helvetica').fontSize(10)
-                   .text(formatValue(incident.time), startX + 5, startY + 5, { 
-                       width: colWidths[0] - 10,
-                       align: 'center'
-                   })
-                   .text(formatValue(incident.description), startX + colWidths[0] + 5, startY + 5, { 
-                       width: colWidths[1] - 10
-                   })
-                   .text(formatValue(action), startX + colWidths[0] + colWidths[1] + 5, startY + 5, { 
-                       width: colWidths[2] - 10
-                   });
-                
-                startY += adjustedRowHeight;
-            });
+                   .text('-', startX + 5, startY + 5, { width: colWidths[0] - 10, align: 'center' })
+                   .text('-', startX + colWidths[0] + 5, startY + 5, { width: colWidths[1] - 10, align: 'center' });
+                startY += rowHeight;
+            }
             
             doc.y = startY + 5; // Reduced padding
         };
@@ -583,22 +595,30 @@ router.get('/notifications/:uid/pdf', isAuthenticated, async (req, res) => {
             // Use absolute positioning for the heading
             addSectionHeading(title);
             
-            items.forEach((item, index) => {
-                if (doc.y > contentEndY - 50) doc.addPage();
-                doc.font('Helvetica').fontSize(10).fillColor(colors.text).text(`${index + 1}. ${formatter(item)}`);
-            });
+            if (items && items.length > 0) {
+                items.forEach((item, index) => {
+                    if (doc.y > contentEndY - 50) doc.addPage();
+                    doc.font('Helvetica').fontSize(10).fillColor(colors.text).text(`${index + 1}. ${formatter(item)}`);
+                });
+            } else {
+                doc.font('Helvetica').fontSize(10).fillColor(colors.text).text('-');
+            }
             doc.moveDown(0.5); // Reduced spacing
         };
 
-        // Modified signature block function to match the specified format
+        // Modified signature block function
         const addSignatureBlock = () => {
             // Define lineStartX variable that was missing in original code
             const lineStartX = 40;
             
             // Position and date
-            doc.font('Helvetica').fontSize(10)
-               
+            doc.fontSize(10).font('Helvetica')
+               .text('Signature:', lineStartX, doc.y)
+               .moveDown(2)
+               .text('Safety Manager', lineStartX, doc.y)
+               .text('Date: ' + new Date().toLocaleDateString(), doc.page.width - 150, doc.y - 12);
             
+            doc.moveDown(1);
         };
 
         // Add title with absolute positioning
@@ -611,11 +631,24 @@ router.get('/notifications/:uid/pdf', isAuthenticated, async (req, res) => {
         const vehicles = parseJSONSafely(report.vehicles);
         const incidents = parseJSONSafely(report.chronological_incidents);
 
-        // Create injuries data (assuming these fields exist in the DB or provide defaults)
+        // Create injuries data - FIXED THIS PART to ensure all fields exist
+        // First check if we have the injury fields in the report
         const injuries = {
-            driver: report.injuries_driver || { fatal: 0, serious: 0, minor: 0 },
-            groundStaff: report.injuries_ground_staff || { fatal: 0, serious: 0, minor: 0 },
-            others: report.injuries_others || { fatal: 0, serious: 0, minor: 0 }
+            driver: {
+                fatal: report.injuries_fatal_driver || 0,
+                serious: report.injuries_serious_driver || 0,
+                minor: report.injuries_minor_driver || 0
+            },
+            groundStaff: {
+                fatal: report.injuries_fatal_ground_staff || 0,
+                serious: report.injuries_serious_ground_staff || 0, 
+                minor: report.injuries_minor_ground_staff || 0
+            },
+            others: {
+                fatal: report.injuries_fatal_other || 0,
+                serious: report.injuries_serious_other || 0,
+                minor: report.injuries_minor_other || 0
+            }
         };
 
         // Basic Details Section
@@ -638,7 +671,7 @@ router.get('/notifications/:uid/pdf', isAuthenticated, async (req, res) => {
         });
 
         // Vehicle/Equipment Details - condensed for space efficiency
-        if (vehicles.length > 0) {
+        if (vehicles && vehicles.length > 0) {
             vehicles.forEach((vehicle, index) => {
                 createFullTable(doc, `Details of Vehicles/Equipments,(Vehicle ${index + 1})`, {
                     'Type of Vehicle/Equipment': vehicle.typeOfVehicle,
@@ -659,17 +692,15 @@ router.get('/notifications/:uid/pdf', isAuthenticated, async (req, res) => {
             'Brief Description': report.brief_description
         });
 
-        // Chronological Incidents
-        if (incidents.length > 0) {
-            addChronologicalTable('1.1.1. Chronological summary of the incident', incidents);
-        }
+        // Chronological Incidents - FIXED TO REMOVE ACTION COLUMN
+        addChronologicalTable('1.1.1. Chronological summary of the incident', incidents);
 
         // Action Taken
         createFullTable(doc, '1.1.2. Action taken', {
             'Action Taken': report.action_taken
         });
 
-        // Injuries to Persons
+        // Injuries to Persons - FIXED THIS PART to display properly
         const injuriesHeaders = ['Injuries', 'Driver/Equipment Operator', 'Ground Staff', 'Others'];
         const injuriesData = [
             ['Fatal', injuries.driver.fatal, injuries.groundStaff.fatal, injuries.others.fatal],
@@ -722,7 +753,7 @@ router.get('/notifications/:uid/pdf', isAuthenticated, async (req, res) => {
 
         // Safety Recommendations
         createFullTable(doc, '4. Safety Recommendations', {
-            'Safety Recommendations': report.safety_recommendations || 'N/A'
+            'Safety Recommendations': report.safety_manager || '-'
         });
 
         // Add a small space before signature block - fixed spacing issue
@@ -738,7 +769,7 @@ router.get('/notifications/:uid/pdf', isAuthenticated, async (req, res) => {
             });
         } else {
             addSectionHeading('5. Appendices');
-            doc.font('Helvetica').fontSize(10).fillColor(colors.text).text('N/A');
+            doc.font('Helvetica').fontSize(10).fillColor(colors.text).text('-');
             doc.moveDown(0.5); // Reduced spacing
         }
 

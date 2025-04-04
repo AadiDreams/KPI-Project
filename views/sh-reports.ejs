@@ -128,8 +128,9 @@
                             <li class="report-item">
                                 <span>UID: <%= report.uid %> | Incident: <%= report.type_of_incident %> | Date: <%= report.created_at %></span>
                                 <div class="report-buttons">
-                                    <!-- <button class="view-btn btn" data-uid="<%= report.uid %>">View</button> -->
+
                                     <button class="print-btn btn" data-uid="<%=report.uid%>">Print</button>
+
                                 </div>
                             </li>
                         <% }) %>

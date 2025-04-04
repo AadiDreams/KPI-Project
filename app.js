@@ -638,39 +638,7 @@ app.post('/submit-investigation', async (req, res) => {
         console.error('Error updating report_status', error);
         res.status(500).send('Server error');
     }
-
-
 });
-
-
-
-
-
-
-
-
-
-
-
-
-// ✅ Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
-});
-
-
-
-if (process.env.NODE_ENV === 'development') {
-    app.use((req, res, next) => {
-        if (!req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg)$/)) {
-            console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-            console.log("Session Data:", req.session);
-        }
-        next();
-    });
-}
-
 
 const isAuthenticated = (req, res, next) => {
     if (!req.session.user || req.session.user.type !== 'department') {  
@@ -699,3 +667,37 @@ app.post('/:departmentID/notifications/update-report-status', isAuthenticated, a
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 });
+
+// ✅ Start server with network access
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+    // Get local IP address
+    const { networkInterfaces } = require('os');
+    const nets = networkInterfaces();
+    let localIP = 'localhost';
+    
+    // Find IPv4 address
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            // Skip over non-IPv4 and internal addresses
+            if (net.family === 'IPv4' && !net.internal) {
+                localIP = net.address;
+                break;
+            }
+        }
+    }
+    
+    console.log(`🚀 Server is running on:`);
+    console.log(`- Local:   http://localhost:${PORT}`);
+    console.log(`- Network: http://${localIP}:${PORT}`);
+});
+
+if (process.env.NODE_ENV === 'development') {
+    app.use((req, res, next) => {
+        if (!req.path.match(/\.(css|js|png|jpg|jpeg|gif|svg)$/)) {
+            console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+            console.log("Session Data:", req.session);
+        }
+        next();
+    });
+}

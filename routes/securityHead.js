@@ -276,7 +276,6 @@
         }
     });
     
-
     router.get('/incident/:uid/pdf', authenticateSecurityHead, async (req, res) => {
         const uid = decodeURIComponent(req.params.uid);
     
@@ -289,6 +288,9 @@
             if (!rows || rows.length === 0) return res.status(404).send('Incident not found.');
     
             const report = rows[0];
+            
+            // Log the report data to check what's coming from the database
+            console.log("Report data:", JSON.stringify(report, null, 2));
     
             // Generate safe filename
             const safeUid = uid.replace(/[^a-zA-Z0-9-_]/g, '_');
@@ -310,6 +312,17 @@
                 bufferPages: true 
             });
     
+            // Pipe the PDF directly to the response
+            doc.pipe(res);
+    
+            // Also save to file for potential backup
+            const writeStream = fs.createWriteStream(reportPath);
+            doc.pipe(writeStream);
+    
+            // Set proper headers for PDF download
+            res.setHeader('Content-Disposition', `attachment; filename="incident-${safeUid}.pdf"`);
+            res.setHeader('Content-Type', 'application/pdf');
+    
             // Store page references to add watermark at the end
             const pageRefs = [];
     
@@ -327,14 +340,6 @@
                 // Continue without the custom font
             }
     
-            const writeStream = fs.createWriteStream(reportPath);
-            writeStream.on('error', err => res.status(500).send("Error writing the PDF file."));
-    
-            res.setHeader('Content-Disposition', `attachment; filename="incident-${safeUid}.pdf"`);
-            res.setHeader('Content-Type', 'application/pdf');
-    
-            doc.pipe(writeStream);
-    
             // Color Theme
             const colors = {
                 primary: '#ff4444',
@@ -343,8 +348,18 @@
                 text: '#212529'
             };
     
-            // Utility functions
-            const formatValue = value => value ? String(value).trim() : 'N/A';
+            // Improved formatValue function to handle empty values better
+            const formatValue = value => {
+                // If value is null, undefined, empty string, or just whitespace, return empty string
+                if (value === null || value === undefined) {
+                    return '';
+                }
+                if (typeof value === 'string' && value.trim() === '') {
+                    return '';
+                }
+                return String(value).trim();
+            };
+    
             const parseJSONSafely = json => {
                 try {
                     return typeof json === 'string' ? JSON.parse(json) : json || [];
@@ -366,15 +381,15 @@
                     // Check if watermark file exists
                     if (fs.existsSync(watermarkPath)) {
                         // Define exact dimensions for watermark
-                        const watermarkWidth = 180; // Width in points (72 points = 1 inch)
-                        const watermarkHeight = 180; // Height in points
+                        const watermarkWidth = 180;
+                        const watermarkHeight = 180;
                         
                         // Calculate center position
                         const centerX = (doc.page.width - watermarkWidth) / 2;
                         const centerY = (doc.page.height - watermarkHeight) / 2;
                         
                         // Add the watermark with opacity and centered
-                        doc.opacity(0.15) // Set opacity for watermark
+                        doc.opacity(0.15)
                            .image(watermarkPath, centerX, centerY, {
                                 width: watermarkWidth,
                                 height: watermarkHeight
@@ -408,10 +423,10 @@
                     // Check if logo file exists
                     if (fs.existsSync(logoPath)) {
                         // Add logo on right side with specific dimensions
-                        const logoWidth = 80; // Width in points (72 points = 1 inch)
-                        const logoHeight = 25; // Height in points
-                        const logoX = doc.page.width - 40 - logoWidth; // Position from right edge
-                        const logoY = 8; // Vertical position to center with text
+                        const logoWidth = 80;
+                        const logoHeight = 25;
+                        const logoX = doc.page.width - 40 - logoWidth;
+                        const logoY = 8;
                         
                         doc.image(logoPath, logoX, logoY, {
                             width: logoWidth,
@@ -445,7 +460,7 @@
                 doc.moveDown(0.5);
             };
             
-            // Table function with consistent heading positioning
+            // Modified table function to handle empty values better and always display field names
             const createFullTable = (doc, title, data) => {
                 if (doc.y > contentEndY - 100) doc.addPage();
                 
@@ -463,26 +478,47 @@
                     }
                     doc.fillColor(index % 2 === 0 ? '#FFFFFF' : colors.background)
                        .rect(startX, startY, pageWidth, rowHeight).fill();
+                    
+                    // Always show the field name
                     doc.fillColor(colors.text).font('Helvetica-Bold').fontSize(10)
-                       .text(formatValue(key), startX + 5, startY + 5, { width: colWidths[0] });
+                       .text(key, startX + 5, startY + 5, { width: colWidths[0] });
+                    
+                    // For the value, use empty string if it's empty/null
+                    let displayValue = formatValue(value);
+                    
+                    // Debug problematic fields
+                    if (key === 'Status of the Incident' || key === 'Additional Comments' || key === 'Description of Location' || key === 'Legal Details') {
+                        console.log(`Field "${key}" value from DB:`, value);
+                        console.log(`Field "${key}" formatted value:`, displayValue);
+                    }
+                    
                     doc.font('Helvetica').fontSize(10)
-                       .text(formatValue(value), startX + colWidths[0], startY + 5, { width: colWidths[1] });
+                       .text(displayValue, startX + colWidths[0], startY + 5, { width: colWidths[1] });
+                    
                     startY += rowHeight;
                 });
                 doc.y = startY + 10;
             };
     
-            // List function with pagination and consistent heading positioning
+            // Modified list function to handle action field better
             const addItemList = (title, items, formatter) => {
                 if (doc.y > contentEndY - 100) doc.addPage();
                 
                 // Use absolute positioning for the heading
                 addSectionHeading(title);
                 
-                items.forEach((item, index) => {
-                    if (doc.y > contentEndY - 50) doc.addPage();
-                    doc.font('Helvetica').fontSize(10).fillColor(colors.text).text(`${index + 1}. ${formatter(item)}`);
-                });
+                if (items && items.length > 0) {
+                    items.forEach((item, index) => {
+                        if (doc.y > contentEndY - 50) doc.addPage();
+                        
+                        // Use formatter but ensure it doesn't add empty fields
+                        let formattedText = formatter(item);
+                        
+                        doc.font('Helvetica').fontSize(10).fillColor(colors.text).text(`${index + 1}. ${formattedText}`);
+                    });
+                } else {
+                    doc.font('Helvetica').fontSize(10).fillColor(colors.text).text('No items to display');
+                }
                 doc.moveDown(1);
             };
     
@@ -521,16 +557,19 @@
             // Add title with absolute positioning
             const y = doc.y;
             doc.font('Helvetica-Bold').fontSize(18).fillColor(colors.primary)
-               .text('Comprehensive Incident Report', 40, y);
+               .text('Incident Report', 40, y);
             doc.moveDown(1);
     
-            // Basic incident details - added more fields
+            // Print report fields to console for debugging column names
+            console.log("Available report fields:", Object.keys(report));
+    
+            // Basic incident details - using column name from database report object directly
             createFullTable(doc, '1. Basic Incident Details', { 
                 'Incident UID': report.uid, 
                 'Date': report.date, 
                 'Incident Time': report.incident_time, 
                 'Location': report.location, 
-                'Description of Location': report.location_description,
+                'Description of Location': report.description || '', 
                 'Incident Type': report.type_of_incident, 
                 'Description': report.description,
                 'No. of Injured': report.no_of_injured,
@@ -538,7 +577,7 @@
                 'Type of Casualty': report.type_of_casualty
             });
     
-            // Medical & Alert Information - added nurse field
+            // Medical & Alert Information
             createFullTable(doc, '2. Medical & Alert Information', { 
                 'Alert Received By': report.alert_received_by,
                 'Alerted By': report.alerted_by, 
@@ -549,43 +588,57 @@
                 'Ambulance Service': report.ambulance_service 
             });
     
-            // Legal & Police Information - expanded
+            // Legal & Police Information - checking various possible column names
             createFullTable(doc, '3. Legal & Police Information', { 
                 'Police Notified': report.police_notification, 
                 'Police Station': report.police_station,
                 'Reporting Time': report.reporting_time,
                 'Legal Action': report.legal_action,
-                'Legal Details': report.legal_details
+                'Legal Details': report.details || report.legal_action_details || ''
             });
     
-            // Chronological Events - added Action column
+            // Chronological Events
             const events = parseJSONSafely(report.chronological_events);
-            if (events.length > 0) {
-                addItemList('4. Chronological Events', events, event => `Time: ${event.time}, Description: ${event.description}, Action: ${event.action || 'N/A'}`);
-            }
+            addItemList('4. Chronological Events', events, event => {
+                let result = `Time: ${event.time || ''}, Description: ${event.description || ''}`;
+                if (event.action && event.action.trim() !== '') {
+                    result += `, Action: ${event.action}`;
+                }
+                return result;
+            });
     
-            // Witnesses - added Organization column
+            // Witnesses
             const witnesses = parseJSONSafely(report.witnesses);
-            if (witnesses.length > 0) {
-                addItemList('5. Witnesses', witnesses, witness => 
-                    `Name: ${witness.name}, Organization: ${witness.organization || 'N/A'}, Contact: ${witness.contact}, Action: ${witness.action || 'N/A'}`
-                );
-            }
+            addItemList('5. Witnesses', witnesses, witness => {
+                let result = `Name: ${witness.name || ''}`;
+                
+                if (witness.organization && witness.organization.trim() !== '') {
+                    result += `, Organization: ${witness.organization}`;
+                }
+                
+                result += `, Contact: ${witness.contact || ''}`;
+                
+                if (witness.action && witness.action.trim() !== '') {
+                    result += `, Action: ${witness.action}`;
+                }
+                
+                return result;
+            });
     
-            // Additional Details - added Status field
+            // Additional Details - try various possible column names
             createFullTable(doc, '6. Additional Details', {
-                'Damage Details': report.damage_details,
-                'Contributing Factors': report.contributing_factors,
-                'Recommendations': report.recommendations,
-                'Status of the Incident': report.status,
-                'Follow-up Actions': report.follow_up_actions,
-                'Additional Comments': report.additional_comments
+                'Damage Details': report.damage_details || '',
+                'Contributing Factors': report.contributing_factors || '',
+                'Recommendations': report.recommendations || '',
+                'Status of the Incident': report.status_of_incident || report.incident_status || report.current_status || '',
+                'Follow-up Actions': report.follow_up_actions || '',
+                'Additional Comments': report.additional_comments || report.comments || ''
             });
     
             // Submission Details
             createFullTable(doc, '7. Report Submission', {
-                'Submitted By': report.submitted_by,
-                'Designation': report.designation,
+                'Submitted By': report.submitted_by || '',
+                'Designation': report.designation || '',
             });
     
             // Add incident image at the end of the PDF if available
@@ -602,8 +655,6 @@
                     doc.switchToPage(i);
                     const bottomPosition = doc.page.height - 40;
                     doc.lineWidth(2).moveTo(40, bottomPosition - 10).lineTo(doc.page.width - 40, bottomPosition - 10).stroke(colors.primary);
-                    
-                    // No UID or page numbers - just the line
                 }
             };
     
@@ -615,20 +666,26 @@
                 addWatermarkToPage(pageRef);
             });
     
+            // Finalize the PDF
             doc.end();
     
-            writeStream.on("finish", () => {
-                res.download(reportPath, (err) => {
-                    if (err) console.error("Download error:", err);
-                    // Delete the file after download
-                    setTimeout(() => fs.unlink(reportPath, (unlinkErr) => {
+            // The PDF is already being sent to the response stream, so no need for res.download
+            console.log(`PDF generation complete for ${uid}`);
+    
+            // Handle file cleanup after response is complete
+            res.on('finish', () => {
+                // Delete the file after a delay to ensure it's fully written
+                setTimeout(() => {
+                    fs.unlink(reportPath, (unlinkErr) => {
                         if (unlinkErr) console.error("File deletion error:", unlinkErr);
-                    }), 2000);
-                });
+                        else console.log(`Temporary PDF file deleted: ${reportPath}`);
+                    });
+                }, 5000); // Longer timeout for safety
             });
+    
         } catch (error) {
             console.error("PDF Generation Error:", error);
-            res.status(500).send("Internal Server Error");
+            res.status(500).send("Internal Server Error: " + error.message);
         }
     });    
 module.exports = router;
