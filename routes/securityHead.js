@@ -630,9 +630,5 @@
             console.error("PDF Generation Error:", error);
             res.status(500).send("Internal Server Error");
         }
-    });
-<<<<<<< HEAD
-    
-=======
->>>>>>> 687b4c9e96753f72a565896b5ef68ecee1084711
+    });    
 module.exports = router;
