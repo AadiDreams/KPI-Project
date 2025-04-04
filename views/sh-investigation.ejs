@@ -173,8 +173,7 @@
 
                     <tr>
                         <td>Name of Airport</td>
-                        <td><input type="text" id="name-of-airport" name="name-of-airport" required></td>
-                    </tr>
+                        <td><input type="text" id="name-of-airport" name="name-of-airport" value="Kannur International Airport (KIAL)" required></td>                    </tr>
 
                     <tr>
                         <td>Location of Incident</td>
@@ -421,6 +420,19 @@
         let vehicleCount = 1;
 let vehicles = []; // Array to store vehicle data
 let events = []; // Array to store chronological incidents
+
+
+// Option 1: Set default value via JavaScript when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Find the airport name input field and set its value
+    const airportNameField = document.getElementById('name-of-airport');
+    if (airportNameField) {
+        airportNameField.value = "Kannur International Airport (KIAL)";
+    }
+});
+
+// Option 2: You could also modify the HTML directly by changing the input element to include a value attribute:
+// <input type="text" id="name-of-airport" name="name-of-airport" value="Kannur International Airport (KIAL)" required>
 
 // Function to add a new vehicle column
 function addVehicleColumn() {
@@ -774,7 +786,7 @@ document.addEventListener('DOMContentLoaded', function() {
 //load uid number
 function loadUidNumbers() {
     $.ajax({
-        url: "http://localhost:3000/uid_numbers",
+        url: "http://192.168.1.142:3000/uid_numbers",
         type: "GET",
         dataType: "json",
         success: function(data) {
@@ -815,7 +827,7 @@ $(document).ready(function() {
 //load department names
 function loadDepartmentNames() {
     $.ajax({
-        url: "http://localhost:3000/department_names",
+        url: "http://192.168.1.142:3000/department_names",
         type: "GET",
         dataType: "json",
         success: function(data) {

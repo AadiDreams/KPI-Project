@@ -29,12 +29,15 @@ body {
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Add slight shadow */
 }
 
-.logo h1 {
-    font-size: 24px;
-    text-align: center;
-    margin-bottom: 30px;
-    font-weight: bold;
-    text-transform: uppercase;
+.sidebar .logo img {
+    width: 250px;  /* Adjust width as needed */
+    height: auto;  /* Keeps aspect ratio */
+    display: block;
+    margin: 0 ; /* Centers the logo */
+    max-height: 95px;
+    transform: scale(1.03); /* Adjust this value as needed */
+    transform-origin: center; 
+    padding-bottom: 10px;/* Prevents it from taking too much space */
 }
 
 /* Menu items */
