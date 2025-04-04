@@ -687,5 +687,5 @@
             console.error("PDF Generation Error:", error);
             res.status(500).send("Internal Server Error: " + error.message);
         }
-    });
+    });    
 module.exports = router;

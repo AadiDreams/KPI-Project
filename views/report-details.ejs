@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Details</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Report Details</h2>
+        <p><strong>Date:</strong> <%= report.date %></p>
+        <p><strong>Location:</strong> <%= report.location %></p>
+        <p><strong>Description:</strong> <%= report.description %></p>
+        <p><strong>Type of Incident:</strong> <%= report.type_of_incident %></p>
+        <p><strong>Number of Injured:</strong> <%= report.no_of_injured %></p>
+        <p><strong>Incident Details:</strong> <%= report.incident_details %></p>
+        <!-- Add more fields as needed -->
+        <a href="/department/<%= departmentID %>/report" class="back-button">Back to Reports</a>
+    </div>
+</body>
+</html>
