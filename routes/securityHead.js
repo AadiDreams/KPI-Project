@@ -276,7 +276,6 @@
         }
     });
     
-
     router.get('/incident/:uid/pdf', authenticateSecurityHead, async (req, res) => {
         const uid = decodeURIComponent(req.params.uid);
     
@@ -289,6 +288,9 @@
             if (!rows || rows.length === 0) return res.status(404).send('Incident not found.');
     
             const report = rows[0];
+            
+            // Log the report data to check what's coming from the database
+            console.log("Report data:", JSON.stringify(report, null, 2));
     
             // Generate safe filename
             const safeUid = uid.replace(/[^a-zA-Z0-9-_]/g, '_');
@@ -343,8 +345,15 @@
                 text: '#212529'
             };
     
-            // Utility functions
-            const formatValue = value => value ? String(value).trim() : 'N/A';
+            // Improved formatValue function to handle empty values better
+            const formatValue = value => {
+                // If value is null, undefined, empty string, or just whitespace, return empty string
+                if (value === null || value === undefined || String(value).trim() === '') {
+                    return '';
+                }
+                return String(value).trim();
+            };
+    
             const parseJSONSafely = json => {
                 try {
                     return typeof json === 'string' ? JSON.parse(json) : json || [];
@@ -445,7 +454,7 @@
                 doc.moveDown(0.5);
             };
             
-            // Table function with consistent heading positioning
+            // Modified table function to handle empty values better and always display field names
             const createFullTable = (doc, title, data) => {
                 if (doc.y > contentEndY - 100) doc.addPage();
                 
@@ -463,16 +472,29 @@
                     }
                     doc.fillColor(index % 2 === 0 ? '#FFFFFF' : colors.background)
                        .rect(startX, startY, pageWidth, rowHeight).fill();
+                    
+                    // Always show the field name
                     doc.fillColor(colors.text).font('Helvetica-Bold').fontSize(10)
-                       .text(formatValue(key), startX + 5, startY + 5, { width: colWidths[0] });
+                       .text(key, startX + 5, startY + 5, { width: colWidths[0] });
+                    
+                    // For the value, use empty string if it's empty/null
+                    let displayValue = formatValue(value);
+                    
+                    // Debug this specific field
+                    if (key === 'Status of the Incident' || key === 'Additional Comments' || key === 'Description of Location') {
+                        console.log(`Field "${key}" value from DB:`, value);
+                        console.log(`Field "${key}" formatted value:`, displayValue);
+                    }
+                    
                     doc.font('Helvetica').fontSize(10)
-                       .text(formatValue(value), startX + colWidths[0], startY + 5, { width: colWidths[1] });
+                       .text(displayValue, startX + colWidths[0], startY + 5, { width: colWidths[1] });
+                    
                     startY += rowHeight;
                 });
                 doc.y = startY + 10;
             };
     
-            // List function with pagination and consistent heading positioning
+            // Modified list function to handle action field better
             const addItemList = (title, items, formatter) => {
                 if (doc.y > contentEndY - 100) doc.addPage();
                 
@@ -481,7 +503,11 @@
                 
                 items.forEach((item, index) => {
                     if (doc.y > contentEndY - 50) doc.addPage();
-                    doc.font('Helvetica').fontSize(10).fillColor(colors.text).text(`${index + 1}. ${formatter(item)}`);
+                    
+                    // Use formatter but ensure it doesn't add empty fields
+                    let formattedText = formatter(item);
+                    
+                    doc.font('Helvetica').fontSize(10).fillColor(colors.text).text(`${index + 1}. ${formattedText}`);
                 });
                 doc.moveDown(1);
             };
@@ -524,13 +550,17 @@
                .text('Comprehensive Incident Report', 40, y);
             doc.moveDown(1);
     
-            // Basic incident details - added more fields
+            // Ensure we map all field names exactly as they appear in the database
+            // Print report fields to console for debugging column names
+            console.log("Available report fields:", Object.keys(report));
+    
+            // Basic incident details - added more fields and ensure correct field mappings
             createFullTable(doc, '1. Basic Incident Details', { 
                 'Incident UID': report.uid, 
                 'Date': report.date, 
                 'Incident Time': report.incident_time, 
                 'Location': report.location, 
-                'Description of Location': report.location_description,
+                'Description of Location': report.location_description || '', // Ensure column name matches DB
                 'Incident Type': report.type_of_incident, 
                 'Description': report.description,
                 'No. of Injured': report.no_of_injured,
@@ -555,37 +585,55 @@
                 'Police Station': report.police_station,
                 'Reporting Time': report.reporting_time,
                 'Legal Action': report.legal_action,
-                'Legal Details': report.legal_details
+                'Legal Details': report.legal_details || '' // Ensure correct column name
             });
     
-            // Chronological Events - added Action column
+            // Chronological Events - added Action column and fixed action display
             const events = parseJSONSafely(report.chronological_events);
             if (events.length > 0) {
-                addItemList('4. Chronological Events', events, event => `Time: ${event.time}, Description: ${event.description}, Action: ${event.action || 'N/A'}`);
+                addItemList('4. Chronological Events', events, event => {
+                    let result = `Time: ${event.time || ''}, Description: ${event.description || ''}`;
+                    if (event.action && event.action.trim() !== '') {
+                        result += `, Action: ${event.action}`;
+                    }
+                    return result;
+                });
             }
     
-            // Witnesses - added Organization column
+            // Witnesses - improved Organization and Action display
             const witnesses = parseJSONSafely(report.witnesses);
             if (witnesses.length > 0) {
-                addItemList('5. Witnesses', witnesses, witness => 
-                    `Name: ${witness.name}, Organization: ${witness.organization || 'N/A'}, Contact: ${witness.contact}, Action: ${witness.action || 'N/A'}`
-                );
+                addItemList('5. Witnesses', witnesses, witness => {
+                    let result = `Name: ${witness.name || ''}`;
+                    
+                    if (witness.organization && witness.organization.trim() !== '') {
+                        result += `, Organization: ${witness.organization}`;
+                    }
+                    
+                    result += `, Contact: ${witness.contact || ''}`;
+                    
+                    if (witness.action && witness.action.trim() !== '') {
+                        result += `, Action: ${witness.action}`;
+                    }
+                    
+                    return result;
+                });
             }
     
-            // Additional Details - added Status field
+            // Additional Details - ensure all fields are properly mapped from the DB
             createFullTable(doc, '6. Additional Details', {
-                'Damage Details': report.damage_details,
-                'Contributing Factors': report.contributing_factors,
-                'Recommendations': report.recommendations,
-                'Status of the Incident': report.status,
-                'Follow-up Actions': report.follow_up_actions,
-                'Additional Comments': report.additional_comments
+                'Damage Details': report.damage_details || '',
+                'Contributing Factors': report.contributing_factors || '',
+                'Recommendations': report.recommendations || '',
+                'Status of the Incident': report.status || report.incident_status || '', // Try alternative field name
+                'Follow-up Actions': report.follow_up_actions || '',
+                'Additional Comments': report.additional_comments || report.comments || '' // Try alternative field name
             });
     
             // Submission Details
             createFullTable(doc, '7. Report Submission', {
-                'Submitted By': report.submitted_by,
-                'Designation': report.designation,
+                'Submitted By': report.submitted_by || '',
+                'Designation': report.designation || '',
             });
     
             // Add incident image at the end of the PDF if available
