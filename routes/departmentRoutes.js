@@ -82,7 +82,7 @@ router.get('/:departmentID/account', isAuthenticated, async (req, res) => {
 router.post('/:departmentID/account/update-password', isAuthenticated, async (req, res) => {
     try {
         const { currentPassword, newPassword, confirmPassword } = req.body;
-        const departmentID = String(req.session.user?.departmentID);
+        const departmentID = req.session.user?.departmentID;
 
         console.log("🔹 Department ID from session:", departmentID);
         console.log("🔹 User-entered passwords:", { currentPassword, newPassword, confirmPassword });
@@ -115,7 +115,7 @@ router.post('/:departmentID/account/update-password', isAuthenticated, async (re
         }
 
         // Fetch department details including password
-        const [rows] = await db.execute(
+        const rows = await db.execute(
             "SELECT departmentName, password FROM departments WHERE departmentID = ?", 
             [departmentID]
         );

@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
 //load incident types
 function loadIncidentTypes() {
     $.ajax({
-        url: "http://192.168.1.142:3000/type_incidents",
+        url: "http://localhost:3000/type_incidents",
         type: "GET",
         dataType: "json",
         success: function(data) {

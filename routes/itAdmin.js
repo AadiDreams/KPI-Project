@@ -132,21 +132,33 @@ router.post('/account/update-password', isITAdmin, async (req, res) => {
     }
 
     try {
-        const [result] = await pool.query('SELECT password FROM admin_users WHERE role = ?', [role]);
+        // Fetch the stored password from the database
+        const result = await pool.query('SELECT password FROM admin_users WHERE role = ?', [role]);
 
         if (result.length === 0) {
             return res.status(404).send('User not found.');
         }
 
         const storedPassword = result[0].password;
-        let isMatch = storedPassword.length === 60 ? await bcrypt.compare(currentPassword, storedPassword) : currentPassword === storedPassword;
+
+        let isMatch;
+        
+        // Check if stored password is hashed or plaintext
+        if (storedPassword.length === 60) { // bcrypt hash is always 60 characters
+            isMatch = await bcrypt.compare(currentPassword, storedPassword);
+        } else {
+            isMatch = currentPassword === storedPassword; // Direct comparison for plaintext
+        }
 
         if (!isMatch) {
             return res.status(401).send('Current password is incorrect.');
         }
 
+        // Hash the new password before storing it
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-        const [updateResult] = await pool.query('UPDATE admin_users SET password = ? WHERE role = ?', [hashedNewPassword, role]);
+
+        // Update password in the database
+        const updateResult = await pool.query('UPDATE admin_users SET password = ? WHERE role = ?', [hashedNewPassword, role]);
 
         if (updateResult.affectedRows > 0) {
             return res.redirect('/it-admin/account?success=Password updated successfully');

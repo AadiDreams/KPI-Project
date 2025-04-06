@@ -861,7 +861,7 @@ document.addEventListener('DOMContentLoaded', function() {
 //load uid number
 function loadUidNumbers() {
     $.ajax({
-        url: "http://192.168.1.142:3000/uid_numbers",
+        url: "http://localhost:3000/uid_numbers",
         type: "GET",
         dataType: "json",
         success: function(data) {
@@ -902,7 +902,7 @@ $(document).ready(function() {
 //load department names
 function loadDepartmentNames() {
     $.ajax({
-        url: "http://192.168.1.142:3000/department_names",
+        url: "http://localhost:3000/department_names",
         type: "GET",
         dataType: "json",
         success: function(data) {
