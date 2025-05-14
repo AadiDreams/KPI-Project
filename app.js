@@ -668,6 +668,29 @@ app.post('/:departmentID/notifications/update-report-status', isAuthenticated, a
     }
 });
 
+//remarks
+
+app.post("/department/:departmentID/notifications/update-report-remark", isAuthenticated, async (req, res) => {
+    const { uid, remark } = req.body;
+    const { departmentID } = req.params;
+
+    if (!uid || !departmentID || !remark) {
+        return res.status(400).json({ success: false, message: "Missing required fields." });
+    }
+
+    try {
+        await pool.query(
+            "UPDATE investigation SET remarks = ? WHERE uid = ? AND department = ?",
+            [remark, uid, departmentID]
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Database error:", error);
+        res.status(500).json({ success: false, message: "Database error. Please try again later." });
+    }
+});
+
 // ✅ Start server with network access
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Department Dashboard - Notifications</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" type="image/png" href="/images/IRIS.png">
+
     <style>
         .tabs {
                     display: flex;
@@ -163,6 +165,17 @@
                     </ul>
                 </div>
 
+                <!-- Add this inside the body, near the end -->
+<div id="remark-dialog" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 20px; z-index: 1000; max-width: 400px; width: 100%;">
+    <h3>Enter Remark</h3>
+    <textarea id="remark-input" style="width: 100%; height: 100px; margin-bottom: 10px;"></textarea>
+    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button id="cancel-btn" style="padding: 8px 12px; background: #ccc; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+        <button id="submit-btn" style="padding: 8px 12px; background: #b30000; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Submit</button>
+    </div>
+</div>
+<div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
+
                 
             </div>
         </main>
@@ -234,6 +247,83 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         })
     });
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+    const actionButtons = document.querySelectorAll(".btn.action-taken");
+    const remarkDialog = document.getElementById("remark-dialog");
+    const overlay = document.getElementById("overlay");
+    const remarkInput = document.getElementById("remark-input");
+    const cancelButton = document.getElementById("cancel-btn");
+    const submitButton = document.getElementById("submit-btn");
+
+    let currentUid = null;
+
+    // Open the dialog
+    actionButtons.forEach(button => {
+        button.addEventListener("click", (event) => {
+            currentUid = event.target.getAttribute("data-uid");
+            remarkDialog.style.display = "block";
+            overlay.style.display = "block";
+        });
+    });
+
+    // Close the dialog
+    const closeDialog = () => {
+        remarkDialog.style.display = "none";
+        overlay.style.display = "none";
+        remarkInput.value = ""; // Clear the input
+        currentUid = null;
+    };
+
+    cancelButton.addEventListener("click", closeDialog);
+    overlay.addEventListener("click", closeDialog);
+
+    // Submit the remark
+    submitButton.addEventListener("click", async () => {
+    const remark = remarkInput.value.trim();
+    if (!remark) {
+        alert("Please enter a remark.");
+        return;
+    }
+
+    const departmentArray = window.location.pathname.split('/');
+    const departmentID = departmentArray.find(id => id.startsWith('DM_'));
+    if (!departmentID) {
+        alert("Department ID not found.");
+        return;
+    }
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Submitting...";
+
+    try {
+        const response = await fetch(`/department/${departmentID}/notifications/update-report-remark`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ uid: currentUid, remark }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            alert("Remark submitted successfully!");
+            closeDialog();
+        } else {
+            alert(result.message || "Failed to submit remark.");
+        }
+    } catch (error) {
+        console.error("Error submitting remark:", error);
+        alert("An error occurred while submitting the remark. Please try again.");
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Submit";
+    }
+});
+
+});
 
     </script>
 </body>

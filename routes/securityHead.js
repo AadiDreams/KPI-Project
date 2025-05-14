@@ -688,4 +688,33 @@
             res.status(500).send("Internal Server Error: " + error.message);
         }
     });    
+
+    // remarks
+
+    router.get('/investreports/remarks', authenticateSecurityHead, async (req, res) => {
+    const { uid, department } = req.query;
+
+    if (!uid || !department) {
+        return res.status(400).json({ success: false, message: "UID and department are required." });
+    }
+
+    try {
+        // Query to fetch remarks based on UID and department
+        const remarksResult = await pool.query(
+            "SELECT remarks FROM investigation WHERE uid = ? AND department = ?",
+            [uid, department]
+        );
+
+        if (remarksResult.length === 0) {
+            return res.status(404).json({ success: false, message: "No remarks found." });
+        }
+
+        // Respond with the remarks
+        res.json({ success: true, remarks: remarksResult[0].remarks });
+    } catch (err) {
+        console.error("Error fetching remarks:", err.message);
+        res.status(500).send("Server Error");
+    }
+});
+
 module.exports = router;

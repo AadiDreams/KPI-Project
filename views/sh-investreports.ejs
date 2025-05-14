@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incidents - Security Head</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" type="image/png" href="/images/IRIS.png">
+
     <style>
 .tabs {
             display: flex;
@@ -141,8 +143,8 @@
                             <li class="report-item">
                                 <span>UID: <%= report.uid %> &nbsp;&nbsp;|&nbsp;&nbsp; Incident: <%= report.type_of_incident %> &nbsp;&nbsp;|&nbsp;&nbsp; Send to: <%= report.department %></span>
                                 <div class="report-buttons">
-                                    <!-- <button class="btn">Print</button> -->
-                                    <button class="btn action-taken" data-uid="<%= report.uid %>" data-dept="<%= report.department %>">Solved</button>
+                                    <button class="btn">Remarks</button>
+                                    <button class="btn action-taken" data-uid="<%= report.uid %>" data-dept="<%= report.department %>">Close Investigation</button>
                                 </div>
                             </li>
                         <% }) %>
@@ -164,6 +166,15 @@
                 </div>
 
                 
+                <!-- Modal for displaying remarks -->
+<div id="remarks-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #ccc; padding: 20px; z-index: 1000; border-radius: 10px;">
+    <h3>Remarks</h3>
+    <p id="remarks-content">Loading...</p>
+    <button id="close-modal" class="btn">Close</button>
+</div>
+<div id="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
+
+
             </div>
         </main>
     </div>
@@ -219,6 +230,62 @@
         });
     });
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const remarkButtons = document.querySelectorAll(".btn");
+
+    remarkButtons.forEach(button => {
+        if (button.textContent.trim() === "Remarks") {
+            button.addEventListener("click", async (event) => {
+                const reportItem = event.target.closest(".report-item");
+                const uid = reportItem.querySelector("[data-uid]").getAttribute("data-uid");
+                const departmentID = reportItem.querySelector("[data-dept]").getAttribute("data-dept");
+
+                try {
+                    const response = await fetch(`/security-head/investreports/remarks?uid=${uid}&department=${departmentID}`);
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        showRemarksDialog(result.remarks);
+                    } else {
+                        alert("Failed to fetch remarks. Please try again.");
+                    }
+                } catch (error) {
+                    console.error("Error fetching remarks:", error);
+                    alert("An error occurred. Please try again later.");
+                }
+            });
+        }
+    });
+});
+
+// Function to display remarks in a dialog
+function showRemarksDialog(remarks) {
+    const dialog = document.createElement("div");
+    dialog.style.position = "fixed";
+    dialog.style.top = "50%";
+    dialog.style.left = "50%";
+    dialog.style.transform = "translate(-50%, -50%)";
+    dialog.style.backgroundColor = "#fff";
+    dialog.style.padding = "20px";
+    dialog.style.border = "1px solid #ccc";
+    dialog.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+    dialog.style.borderRadius = "8px";
+    dialog.style.zIndex = "1000";
+
+    dialog.innerHTML = `
+        <h3>Remarks</h3>
+        <p>${remarks}</p>
+        <button id="close-dialog" style="margin-top: 10px; padding: 5px 10px; background-color: #b30000; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Close</button>
+    `;
+
+    document.body.appendChild(dialog);
+
+    const closeButton = dialog.querySelector("#close-dialog");
+    closeButton.addEventListener("click", () => dialog.remove());
+}
+
     </script>
 </body>
 </html>
